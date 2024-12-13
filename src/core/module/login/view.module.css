@@ -1,0 +1,17 @@
+.login-view {
+    background-image: url('../../../assets/Hero.png');
+    background-position: center;
+    background-size: cover;
+    align-items: center;
+    justify-content: center
+}
+
+.login-view>div {
+    padding: 2.4rem;
+    background-color: #ffffffe6;
+    border-radius: 0.8rem;
+    width: fit-content;
+    height: 100%;
+    max-height: 63.8rem;
+    box-shadow: var(--shadow-left)
+}
