@@ -28,9 +28,18 @@ const ComponentMap = () => {
   const [positionSelected, setPositionSelected] = useState<google.maps.LatLngLiteral | undefined>();
   const [origin, setOrigin] = useState<google.maps.places.PlaceResult | null>(null);
   const [destination, setDestination] = useState<google.maps.places.PlaceResult | null>(null);
-
   const [originAddress, setOriginAddress] = useState<string>('');
   const [destinationAddress, setDestinationAddress] = useState<string>('');
+  const [coords, setCoords] = useState<google.maps.LatLngLiteral>()
+
+  const handleLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        setPositionSelected({ lat: latitude, lng: longitude });
+      });
+    }
+  };
 
   useEffect(()=>{
     if (!selectedPlace || !center ) return;
@@ -65,6 +74,7 @@ console.log(positionSelected)
           <AutocompleteCustom onPlaceSelect={setOrigin} />
           <h3>Destination</h3>
           <AutocompleteCustom onPlaceSelect={setDestination} />
+          <button style={{width:'60px', height:'30px'}} onClick={handleLocation}>Get Location</button>
         </div>  
         <Map
           defaultZoom={7}
@@ -73,7 +83,7 @@ console.log(positionSelected)
           disableDefaultUI={true}
           mapId={'d22eb7ad6a03f27b'}
         >
-           <AdvancedMarker position={positionSelected}/>
+          <AdvancedMarker position={positionSelected}/>
         </Map>
   
         <CustomMapControl
