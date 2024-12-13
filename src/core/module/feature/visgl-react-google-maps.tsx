@@ -1,6 +1,21 @@
-import {useEffect, useMemo, useState} from "react";
+import './feature.css'
+import React, {useEffect, useState, useCallback, FormEvent} from 'react';
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
+// import gl from "@vis.gl/react-google-maps";
+import usePlacesAutocomplete, {
+    getGeocode,
+    getLatLng,
+  } from "use-places-autocomplete";
 
+import {
+	Combobox,
+	ComboboxInput,
+	ComboboxPopover,
+	ComboboxList,
+	ComboboxOption,
+	ComboboxOptionText,
+} from "@reach/combobox";
+import "@reach/combobox/styles.css";
 
 export default function MapGl() {
     const position = { lat: 21.028333, lng: 105.853333 }
@@ -32,40 +47,96 @@ export default function MapGl() {
     // },[])
 
     return (
-        <div style={{width: '1000px', height: '1000px'}}>
-            {/* <button style={{width:'40px', height:'40px', backgroundColor:'red' }} onClick={hanldeLocation}></button> */}
-            {/* <APIProvider apiKey="AIzaSyDhSc0v16Cv2aJdlW5tp9Ks8-bI77RQwNk">
-                <Map
-                    defaultCenter={coords}
-                    defaultZoom={10} 
-                    mapId={'d22eb7ad6a03f27b'}
-                >
-                    <AdvancedMarker position={coords}>
-                        <Pin background={"gray"} borderColor={"green"} glyphColor={"purple"}/>
-                    </AdvancedMarker>
+        // <AutocompleteCustom/>
+        <GoogleMapComponent/>
+        // <div style={{width: '1000px', height: '1000px'}}>
+        //     {/* <button style={{width:'40px', height:'40px', backgroundColor:'red' }} onClick={hanldeLocation}></button> */}
+        //     {/* <APIProvider apiKey="AIzaSyDhSc0v16Cv2aJdlW5tp9Ks8-bI77RQwNk">
+        //         <Map
+        //             defaultCenter={coords}
+        //             defaultZoom={10} 
+        //             mapId={'d22eb7ad6a03f27b'}
+        //         >
+        //             <AdvancedMarker position={coords}>
+        //                 <Pin background={"gray"} borderColor={"green"} glyphColor={"purple"}/>
+        //             </AdvancedMarker>
 
-                    <AdvancedMarker position={position} onClick={() => { setOpen(true)}}>
-                        <Pin background={"gray"} borderColor={"green"} glyphColor={"purple"}/>
-                    </AdvancedMarker>
-                     {open && <InfoWindow position={position} onCloseClick={()=>{ setOpen(false) }}><p>I'm Hambug</p></InfoWindow>} 
-                </Map>
-            </APIProvider> */}
-            {/* // routes A to B */}
-            {/* <APIProvider apiKey={"AIzaSyDhSc0v16Cv2aJdlW5tp9Ks8-bI77RQwNk"}>
+        //             <AdvancedMarker position={position} onClick={() => { setOpen(true)}}>
+        //                 <Pin background={"gray"} borderColor={"green"} glyphColor={"purple"}/>
+        //             </AdvancedMarker>
+        //              {open && <InfoWindow position={position} onCloseClick={()=>{ setOpen(false) }}><p>I'm Hambug</p></InfoWindow>} 
+        //         </Map>
+        //     </APIProvider> */}
+        //     {/* // routes A to B */}
+         
+
+        // </div>
+    )
+}
+ 
+function GoogleMapComponent() {
+    const center = { lat: 21.028333, lng: 105.853333 }
+    const [selected, setSelected] = useState(null);
+    return (
+        <>
+            <div className="places-container" style={{width:'1000px', height:'200px'}}> 
+              <PlacesAutocomplete setSelected={setSelected}/>
+            </div>
+           
+            <APIProvider apiKey={"AIzaSyDhSc0v16Cv2aJdlW5tp9Ks8-bI77RQwNk"}>
                 <Map
-                    defaultCenter={position}
+                    defaultCenter={center}
                     defaultZoom={10} 
                     mapId={'d22eb7ad6a03f27b'}
                     fullscreenControl={false}
                 >
-                    <Directions/>
+                     {selected && <AdvancedMarker position={selected}/>}
                 </Map>
-            </APIProvider> */}
-
-        </div>
+            </APIProvider>
+        </>
     )
 }
 
+// input search
+function PlacesAutocomplete({ setSelected }) {
+    const {
+      ready,
+      value,
+      setValue,
+      suggestions: {status, data},
+      clearSuggestions
+    } = usePlacesAutocomplete();
+    
+    const handleSelected = async (address) => {
+      setValue(address, false);
+      clearSuggestions();
+  
+      const results = await getGeocode({ address });
+      const {lat, lng} = await getLatLng(results[0]);
+      setSelected( { lat, lng} );
+  
+    }
+    return (
+      <Combobox onSelect={handleSelected}>
+        <ComboboxInput 
+          value={value}
+          onChange={(e) =>{ setValue(e.target.value)}}
+          disabled={!ready}
+          // className="combobox-input"
+          style={{width:'500px', height:'40px'}}
+          placeholder="Search an address"
+        />
+        <ComboboxPopover>
+          <ComboboxList>
+            {status === "OK" && 
+              data.map(({ place_id, description }) => (
+                <ComboboxOption style={{width:'500px', height:'40px', fontSize:'2.4rem'}} key={place_id} value={description}/>
+              ))}
+          </ComboboxList>
+        </ComboboxPopover>
+      </Combobox>
+    )
+  }
 
 // routes A to B
 function Directions() {
@@ -125,5 +196,104 @@ function Directions() {
                 ))}
             </ul>
         </div>
+    )
+}
+
+
+interface Props {
+    onPlaceSelect: (place: google.maps.places.PlaceResult | null) => void;
+}
+
+const AutocompleteCustom = ({onPlaceSelect}: Props) => {
+    const map = useMap();
+    const places = useMapsLibrary('places');
+
+    const [sessionToken, setSessionToken] = useState<google.maps.places.AutocompleteSessionToken>();
+    const [autocompleteService, setAutocompleteService] = useState<google.maps.places.AutocompleteService | null>(null);
+    const [placesService, setPlacesService] = useState<google.maps.places.PlacesService | null>(null);
+    const [predictionResults, setPredictionResults] = useState<Array<google.maps.places.AutocompletePrediction>>([]);
+    const [inputValue, setInputValue] = useState<string>('');
+
+    useEffect(()=>{
+        if (!places || !map) return;
+        setAutocompleteService(new places.AutocompleteService());
+        setPlacesService(new places.PlacesService(map));
+        setSessionToken(new places.AutocompleteSessionToken());
+
+        return () => setAutocompleteService(null);
+    },[map, places])
+
+    const fetchPredictions = useCallback(
+        async (inputValue: string) => {
+          if (!autocompleteService || !inputValue) {
+            setPredictionResults([]);
+            return;
+          }
+    
+          const request = {input: inputValue, sessionToken};
+          const response = await autocompleteService.getPlacePredictions(request);
+    
+          setPredictionResults(response.predictions);
+        },
+        [autocompleteService, sessionToken]
+    );
+    
+    const onInputChange = useCallback(
+        (event: FormEvent<HTMLInputElement>) => {
+          const value = (event.target as HTMLInputElement)?.value;
+    
+          setInputValue(value);
+          fetchPredictions(value);
+        },
+        [fetchPredictions]
+    );
+
+    const handleSuggestionClick = useCallback(
+        (placeId: string) => {
+          if (!places) return;
+    
+          const detailRequestOptions = {
+            placeId,
+            fields: ['geometry', 'name', 'formatted_address'],
+            sessionToken
+          };
+    
+          const detailsRequestCallback = (
+            placeDetails: google.maps.places.PlaceResult | null
+          ) => {
+            onPlaceSelect(placeDetails);
+            setPredictionResults([]);
+            setInputValue(placeDetails?.formatted_address ?? '');
+            setSessionToken(new places.AutocompleteSessionToken());
+          };
+    
+          placesService?.getDetails(detailRequestOptions, detailsRequestCallback);
+        },
+        [onPlaceSelect, places, placesService, sessionToken]
+    );
+
+    return (
+        <div className="autocomplete-container">
+        <input
+          value={inputValue}
+          onInput={(event: FormEvent<HTMLInputElement>) => onInputChange(event)}
+          placeholder="Search for a place"
+        />
+  
+        {predictionResults.length > 0 && (
+          <ul className="custom-list">
+            {predictionResults.map(({place_id, description}) => {
+              return (
+                <li
+                  key={place_id}
+                  className="custom-list-item"
+                  onClick={() => handleSuggestionClick(place_id)}>
+                  {description}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     )
 }

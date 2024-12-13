@@ -8,7 +8,7 @@ import LoginView from './core/module/login/view'
 import { Ultis } from './common/Utils';
 import GgMap from './core/module/feature/react-google-maps';
 // import MapGl from './core/module/feature/visgl-react-google-maps';
-
+import ComponentMap from './core/module/feature/map/componentmap'
 const checkToken = () => {
   const token = Ultis.getCookie('accessToken');
   if (token) return true;
@@ -25,7 +25,7 @@ function App() {
       <ToastContainer />
       <Routes>
         <Route path="/login" element={<LoginView />} />
-        <Route path="/*" element={checkToken() ? <GgMap/> : <Navigate to={"/login"} replace />} />
+        <Route path="/*" element={checkToken() ? <ComponentMap/> : <Navigate to={"/login"} replace />} />
       </Routes>
     </BrowserRouter>
   </Provider>
