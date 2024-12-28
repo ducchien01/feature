@@ -1,8 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit'
-import accountReducer from './core/reducer/customer/reducer'
+import customerReducer from './core/reducer/customer/reducer'
 export const store = configureStore({
     reducer: {
-         account: accountReducer,
+        customer: customerReducer,
     },
 })
 

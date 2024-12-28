@@ -1,0 +1,56 @@
+.autocomplete-container {
+    position: absolute;
+    width: 80%;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--neutral-absolute-background-color);
+    border-radius: 0.8rem;
+    font-size: 1.6rem;
+  }
+  
+  .custom-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0.8rem;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+  }
+  
+  /* Mục gợi ý */
+  .custom-list-item {
+    padding: 1rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .custom-list-item:hover {
+    background-color: var(--neutral-hover-background-color);
+    /* color: var(--neutral-text-title-color); */
+  }
+  
+  /* Không có gợi ý */
+  .custom-list .no-suggestions {
+    padding: 10px;
+    color: #999;
+    font-style: italic;
+    pointer-events: none;
+  }
+  
+  /* 
+    .custom-list-item {
+      padding: 1rem;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    } */

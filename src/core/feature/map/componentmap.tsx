@@ -30,7 +30,8 @@ const ComponentMap = () => {
   const [destination, setDestination] = useState<google.maps.places.PlaceResult | null>(null);
   const [originAddress, setOriginAddress] = useState<string>('');
   const [destinationAddress, setDestinationAddress] = useState<string>('');
-  const [coords, setCoords] = useState<google.maps.LatLngLiteral>()
+  // const [coords, setCoords] = useState<google.maps.LatLngLiteral>()
+  const [placeName, setPlaceName] = useState<string | null>(null);
 
   const handleLocation = () => {
     if (navigator.geolocation) {
@@ -40,6 +41,20 @@ const ComponentMap = () => {
       });
     }
   };
+
+  const handleClick = (e: any) => {
+    setPositionSelected(e.detail.latLng);
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ location: e.detail.latLng }, (results, status) => {
+      if (status === "OK" && results && results.length > 0) {
+        setPlaceName(results[0].formatted_address); // Lấy tên địa điểm từ kết quả
+      } else {
+        console.error("Geocoder failed due to: " + status);
+        setPlaceName("Không thể lấy tên địa điểm");
+      }
+    });
+  };
+
 
   useEffect(()=>{
     if (!selectedPlace || !center ) return;
@@ -81,6 +96,7 @@ console.log(positionSelected)
           defaultCenter={center}
           gestureHandling={'greedy'}
           disableDefaultUI={true}
+          onClick={handleClick}
           mapId={'d22eb7ad6a03f27b'}
         >
           <AdvancedMarker position={positionSelected}/>
@@ -98,7 +114,21 @@ console.log(positionSelected)
           onAutocompleteModeChange={setSelectedAutocompleteMode}
         /> */}
 
+        <MapControl position={ControlPosition.TOP_CENTER} />
+
+        <MapControl position={ControlPosition.BOTTOM_CENTER}>
+          {positionSelected &&
+            <div className='col' style={{ marginBottom: '2rem', background: "#fff", padding: "10px", borderRadius: "5px", fontSize: '1.2rem' }}>
+              <div style={{ color: "var(--neutral-text-title-color)", fontSize: '1.2rem' }}>{placeName ?? "Không có địa điểm nào"}</div>
+              <div><span style={{ color: "var(--primary-main-color)", fontSize: '0.8rem' }}>{positionSelected?.lat.toFixed(6)}</span>, <span style={{ color: "var(--primary-main-color)", fontSize: '1rem' }}>{positionSelected?.lng.toFixed(6)}</span></div>
+            </div>
+          }
+        </MapControl>
+
         <MapHandler place={selectedPlace} />
+        
+        <AutocompleteCustom onPlaceSelect={setSelectedPlace} handlePositionSelected={setPositionSelected} handlePlaceName={setPlaceName} />
+        
         <Directions origin={originAddress} destination={destinationAddress}/>
       </APIProvider>
     </div>

@@ -4,12 +4,11 @@
     padding: 2rem 3.2rem;
     width: 100%;
     border-bottom: var(--neutral-bolder-border-color);
-    background-color: #fff;
-    z-index: 9;
+    background-color: var(--neutral-main-background-color);
+    z-index: 10;
     height: 8rem;
     top: 0;
 }
-
 
 .main-layout>.header>.logo {
     background-image: url("../../../assets/LogoEbig.svg");

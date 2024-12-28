@@ -1,5 +1,5 @@
 import { ToastMessage, WLoginView, Winicon } from "wini-web-components";
-import styles from './view.module.css';
+import styles from './index.module.css';
 import LogoWini from '../../../assets/LogoWini.svg';
 import { CustomerActions } from "../../reducer/customer/reducer";
 import { Ultis } from '../../../common/Utils';

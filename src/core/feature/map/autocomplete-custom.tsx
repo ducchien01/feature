@@ -1,13 +1,17 @@
 import React, {useEffect, useState, useCallback, FormEvent} from 'react';
 import {useMap, useMapsLibrary} from '@vis.gl/react-google-maps';
+import { TextField, Winicon } from 'wini-web-components';
 
 interface Props {
   onPlaceSelect: (place: google.maps.places.PlaceResult | null) => void;
+  // place
+  handlePositionSelected?: any;
+  handlePlaceName?: any
 }
 
 // This is a custom built autocomplete component using the "Autocomplete Service" for predictions
 // and the "Places Service" for place details
-export const AutocompleteCustom = ({onPlaceSelect}: Props) => {
+export const AutocompleteCustom = ({onPlaceSelect, handlePositionSelected, handlePlaceName}: Props) => {
   const map = useMap();
   const places = useMapsLibrary('places');
 
@@ -75,6 +79,7 @@ export const AutocompleteCustom = ({onPlaceSelect}: Props) => {
         onPlaceSelect(placeDetails);
         setPredictionResults([]);
         setInputValue(placeDetails?.formatted_address ?? '');
+        handlePlaceName(placeDetails?.formatted_address);
         setSessionToken(new places.AutocompleteSessionToken());
       };
 
@@ -83,21 +88,43 @@ export const AutocompleteCustom = ({onPlaceSelect}: Props) => {
     [onPlaceSelect, places, placesService, sessionToken]
   );
 
+  const handleGetLoaction = () => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const { latitude, longitude } = position.coords;
+      handlePositionSelected({ lat: latitude, lng: longitude });
+      map?.panTo({ lat: latitude, lng: longitude })
+      map?.setZoom(15)
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
+        if (status === "OK" && results && results.length > 0) {
+          handlePlaceName(results[0].formatted_address); // Lấy tên địa điểm từ kết quả
+        } else {
+          console.error("Geocoder failed due to: " + status);
+          handlePlaceName("Không thể lấy tên địa điểm");
+        }
+      });
+    });
+  }
+
   return (
     <div className="autocomplete-container">
-      <input
+      <TextField
         value={inputValue}
-        onInput={(event: FormEvent<HTMLInputElement>) => onInputChange(event)}
-        placeholder="Search for a place"
+        style={{ width: "100%" }}
+        prefix={<Winicon src={"fill/development/zoom"} size={"1.4rem"} />}
+        suffix={<Winicon src={"outline/location/compass-3"} size={"1.4rem"} color={"var(--primary-main-color)"} onClick={handleGetLoaction} style={{ cursor: 'pointer' }} />}
+        className={`placeholder-2`}
+        placeholder={'Tìm kiếm'}
+        onChange={(event: FormEvent<HTMLInputElement>) => onInputChange(event)}
       />
-
       {predictionResults.length > 0 && (
         <ul className="custom-list">
-          {predictionResults.map(({place_id, description}) => {
+          {predictionResults.map(({ place_id, description }) => {
             return (
               <li
                 key={place_id}
-                className="custom-list-item"
+                // style={{ padding: '1rem', fontSize: '1.2rem', height:'3rem'}}
+                className={"custom-list-item"}
                 onClick={() => handleSuggestionClick(place_id)}>
                 {description}
               </li>

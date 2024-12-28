@@ -1,0 +1,67 @@
+::-webkit-scrollbar {
+    width: 1rem;
+  }
+  
+  div:has(table) {
+    scrollbar-width: thin
+  }
+  
+  /* Track */
+  ::-webkit-scrollbar-track {
+    border-radius: 0.4rem;
+  }
+  
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    border-radius: 0.4rem;
+    background-color: #c1c1c1;
+    visibility: hidden;
+  }
+  
+  *:hover::-webkit-scrollbar-thumb {
+    visibility: visible;
+  }
+  
+  .main-layout::-webkit-scrollbar {
+    width: 1.2rem;
+  }
+  
+  .main-layout::-webkit-scrollbar-thumb {
+    border-radius: 0;
+  }
+  
+  .main-layout {
+    /* display: flex; */
+    /* flex-wrap: wrap; */
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    /* flex-direction: column; */
+    /* overflow: hidden auto; */
+  }
+  
+  .main-layout-body {
+    width: 100%;
+    flex: 1;
+  }
+  
+  /* .main-layout:has(.main-layout-body.fillH) {
+    overflow: hidden;
+  }
+  
+  .main-layout-body.fillH {
+    height: calc(100% - min(8rem, 80px) - 1px);
+  }
+   */
+/* 
+  @media only screen and (min-width: 1200px) {
+    .card-mentor-schedule>.time-infor {
+        border: none !important;
+        border-left: var(--neutral-bolder-border-color) !important;
+        padding-left: 2rem !important;
+        padding-top: 0 !important;
+    }
+  } */
+  
+  /*  */
+  

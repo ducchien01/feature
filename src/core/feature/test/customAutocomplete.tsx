@@ -1,17 +1,19 @@
-import React, {useEffect, useState, useCallback} from 'react';
+import React, {useEffect, useState, useCallback, FormEvent} from 'react';
 import {useMap, useMapsLibrary} from '@vis.gl/react-google-maps';
-import Combobox from 'react-widgets/Combobox';
-
-import 'react-widgets/styles.css';
+import { Select1Form } from '../../../component/form';
+import { randomGID } from '../../../common/Utils';
+import { useForm } from 'react-hook-form';
 
 interface Props {
   onPlaceSelect: (place: google.maps.places.PlaceResult | null) => void;
 }
 
-// This uses the Combobox from "react-widgets" (https://jquense.github.io/react-widgets/docs/Combobox)
-export const AutocompleteCustomHybrid = ({onPlaceSelect}: Props) => {
+// This is a custom built autocomplete component using the "Autocomplete Service" for predictions
+// and the "Places Service" for place details
+export const AutocompleteCustom = ({onPlaceSelect}: Props) => {
   const map = useMap();
   const places = useMapsLibrary('places');
+  const methods = useForm({ shouldFocusError: false, defaultValues: { Id: randomGID(), Form: { Required: true } } })
 
   // https://developers.google.com/maps/documentation/javascript/reference/places-autocomplete-service#AutocompleteSessionToken
   const [sessionToken, setSessionToken] = useState<google.maps.places.AutocompleteSessionToken>();
@@ -26,8 +28,6 @@ export const AutocompleteCustomHybrid = ({onPlaceSelect}: Props) => {
 
   const [inputValue, setInputValue] = useState<string>('');
 
-  const [fetchingData, setFetchingData] = useState<boolean>(false);
-
   useEffect(() => {
     if (!places || !map) return;
 
@@ -41,38 +41,34 @@ export const AutocompleteCustomHybrid = ({onPlaceSelect}: Props) => {
   const fetchPredictions = useCallback(
     async (inputValue: string) => {
       if (!autocompleteService || !inputValue) {
+        setPredictionResults([]);
         return;
       }
-
-      setFetchingData(true);
 
       const request = {input: inputValue, sessionToken};
       const response = await autocompleteService.getPlacePredictions(request);
 
       setPredictionResults(response.predictions);
-      setFetchingData(false);
     },
     [autocompleteService, sessionToken]
   );
 
   const onInputChange = useCallback(
-    (value: google.maps.places.AutocompletePrediction | string) => {
-      if (typeof value === 'string') {
-        setInputValue(value);
-        fetchPredictions(value);
-      }
+    (event: FormEvent<HTMLInputElement>) => {
+      const value = (event.target as HTMLInputElement)?.value;
+
+      setInputValue(value);
+      fetchPredictions(value);
     },
     [fetchPredictions]
   );
 
-  const onSelect = useCallback(
-    (prediction: google.maps.places.AutocompletePrediction | string) => {
-      if (!places || typeof prediction === 'string') return;
-
-      setFetchingData(true);
+  const handleSuggestionClick = useCallback(
+    (placeId: string) => {
+      if (!places) return;
 
       const detailRequestOptions = {
-        placeId: prediction.place_id,
+        placeId,
         fields: ['geometry', 'name', 'formatted_address'],
         sessionToken
       };
@@ -81,10 +77,9 @@ export const AutocompleteCustomHybrid = ({onPlaceSelect}: Props) => {
         placeDetails: google.maps.places.PlaceResult | null
       ) => {
         onPlaceSelect(placeDetails);
+        setPredictionResults([]);
         setInputValue(placeDetails?.formatted_address ?? '');
         setSessionToken(new places.AutocompleteSessionToken());
-
-        setFetchingData(false);
       };
 
       placesService?.getDetails(detailRequestOptions, detailsRequestCallback);
@@ -94,22 +89,45 @@ export const AutocompleteCustomHybrid = ({onPlaceSelect}: Props) => {
 
   return (
     <div className="autocomplete-container">
-      <Combobox
-        placeholder="Search for a place"
-        data={predictionResults}
-        dataKey="place_id"
-        textField="description"
+      <input
         value={inputValue}
-        onChange={onInputChange}
-        onSelect={onSelect}
-        busy={fetchingData}
-        // Since the Autocomplete Service API already returns filtered results
-        // always want to display them all.
-        filter={() => true}
-        focusFirstItem={true}
-        hideEmptyPopup
-        hideCaret
+        onInput={(event: FormEvent<HTMLInputElement>) => onInputChange(event)}
+        placeholder="Search for a place"
       />
+          <Select1Form
+                required
+                style={{ flex: 1 }}
+                label={'TablePK'}
+                control={methods.control as any}
+                errors={methods.formState.errors}
+                name={'TablePK'}
+                options={predictionResults.map(({place_id, description}) => {
+                  console.log(place_id, description)
+                    return {
+                        id: place_id,
+                        name: description,
+                    }
+                })}
+                onChange={(v) => { }}
+            />
+      {predictionResults.length > 0 && (
+        <ul className="custom-list">
+          {predictionResults.map(({place_id, description}) => {
+            return (
+              <li
+                key={place_id}
+                className="custom-list-item"
+                onClick={() => handleSuggestionClick(place_id)}>
+                {description}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 };
+// function useForm(arg0: { shouldFocusError: boolean; defaultValues: { Id: any; Form: { Required: boolean; }; }; }) {
+//   throw new Error('Function not implemented.');
+// }
+

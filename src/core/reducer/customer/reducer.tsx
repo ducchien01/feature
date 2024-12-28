@@ -63,12 +63,11 @@ export class CustomerActions {
         }
     }
 
-    static login = async (props: { UserName: string, Password: string }) => {
-        const res = await BaseDA.post(ConfigApi.url + 'data/login', {
+    static login = async (props: { UserName: string, PassWord: string }) => {
+        const res = await BaseDA.post(ConfigApi.url + 'intergration/ebig/login', {
             headers: { 
                 pid: ConfigApi.ebigId,
                 module: 'Customer',
-                project: 'ebig'
             },
             body: props
         })

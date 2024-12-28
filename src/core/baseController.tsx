@@ -1,16 +1,18 @@
 import { BaseDA } from "./baseDA";
 import ConfigApi from "../common/config";
+import { Ultis } from "../common/Utils";
 
 export class DataController {
     private module: string;
+
     constructor(module: string) {
         this.module = module
     }
-
+  
     async getAll() {
         const res = await BaseDA.get(ConfigApi.url + 'data/getAll', {
             headers: {
-                pid: ConfigApi.pid,
+                pid: ConfigApi.ebigId,
                 module: this.module,
             },
         })
@@ -20,7 +22,7 @@ export class DataController {
     async aggregateList(options: { page?: number, size?: number, searchRaw?: string, filter?: string, sortby?: Array<{ prop: string, direction?: "ASC" | "DESC" }> } | undefined) {
         const res = await BaseDA.post(ConfigApi.url + 'data/aggregateList', {
             headers: {
-                pid: ConfigApi.pid,
+                pid: ConfigApi.ebigId,
                 module: this.module,
             },
             body: { ...options, sortby: options?.sortby ?? [{ prop: "Sort", direction: "DESC" }, { prop: "DateCreated", direction: "DESC" }] }
@@ -31,7 +33,7 @@ export class DataController {
     async group(options: { searchRaw?: string, reducers: string }) {
         const res = await BaseDA.post(ConfigApi.url + 'data/group', {
             headers: {
-                pid: ConfigApi.pid,
+                pid: ConfigApi.ebigId,
                 module: this.module,
             },
             body: options
@@ -58,7 +60,7 @@ export class DataController {
                 })
             }
             const res = await BaseDA.post(ConfigApi.url + 'data/groupByIds', {
-                headers: { pid: ConfigApi.pid },
+                headers: { pid: ConfigApi.ebigId },
                 body: {
                     reducers: groupReducers
                 }
@@ -71,7 +73,7 @@ export class DataController {
     async getListSimple(options: { page?: number, size?: number, query?: string, returns?: Array<string>, sortby?: { BY: string, DIRECTION?: "ASC" | "DESC" } } | undefined) {
         const res = await BaseDA.post(ConfigApi.url + 'data/getListSimple', {
             headers: {
-                pid: ConfigApi.pid,
+                pid: ConfigApi.ebigId,
                 module: this.module,
             },
             body: { searchRaw: options?.query?.length ? options?.query : "*", page: options?.page ?? 1, size: options?.size ?? 10, returns: options?.returns, sortby: options?.sortby }
@@ -82,7 +84,7 @@ export class DataController {
     async getById(id: string) {
         const res = await BaseDA.post(ConfigApi.url + `data/getById?id=${id}`, {
             headers: {
-                pid: ConfigApi.pid,
+                pid: ConfigApi.ebigId,
                 module: this.module,
             },
         })
@@ -92,7 +94,7 @@ export class DataController {
     async getByListId(ids: Array<string>) {
         const res = await BaseDA.post(ConfigApi.url + 'data/getByIds', {
             headers: {
-                pid: ConfigApi.pid,
+                pid: ConfigApi.ebigId,
                 module: this.module,
             },
             body: { ids: ids }
@@ -103,7 +105,7 @@ export class DataController {
     async add(data: Array<{ [p: string]: any }>) {
         const res = await BaseDA.post(ConfigApi.url + 'data/action?action=add', {
             headers: {
-                pid: ConfigApi.pid,
+                pid: ConfigApi.ebigId,
                 module: this.module
             },
             body: { data: data }
@@ -114,7 +116,7 @@ export class DataController {
     async edit(data: Array<{ [p: string]: any }>) {
         const res = await BaseDA.post(ConfigApi.url + 'data/action?action=edit', {
             headers: {
-                pid: ConfigApi.pid,
+                pid: ConfigApi.ebigId,
                 module: this.module
             },
             body: { data: data }
@@ -125,7 +127,7 @@ export class DataController {
     async delete(ids: Array<string>) {
         const res = await BaseDA.post(ConfigApi.url + 'data/action?action=delete', {
             headers: {
-                pid: ConfigApi.pid,
+                pid: ConfigApi.ebigId,
                 module: this.module
             },
             body: { ids: ids }
@@ -136,11 +138,18 @@ export class DataController {
     async groupBy(params: { reducers: Array<{ Name: string, Reducer: any, ReducerBy?: string, GroupBy: string, Query?: string }>, searchRaw?: string }) {
         const res = await BaseDA.post(ConfigApi.url + `data/groupBy`, {
             headers: {
-                pid: ConfigApi.pid,
+                pid: ConfigApi.ebigId,
                 module: this.module,
             },
             body: params
         })
         return res
+    }
+    
+    token = () => Ultis.getCookie('accessToken')
+
+    logout = () => {
+        Ultis.clearCookie()
+        window.location.href = '/' + window.location.pathname.split('/')[1]
     }
 }

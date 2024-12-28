@@ -1,0 +1,6 @@
+.main-layout>.main-layout-body>.chat-container {
+    background-color: aqua;
+    height: calc(100vh - 8rem); /* Trừ chiều cao của header */
+    overflow: hidden; /* Ngăn tràn */
+    align-items: flex-start;
+}
