@@ -6,12 +6,7 @@ import { DataController } from '../baseController';
 import { CustomerActions } from '../reducer/customer/reducer';
 import { useDispatch } from 'react-redux';
 
-const Layout = (WrappedComponent: React.ComponentType<any>) => {
-    // const handleDeleteChat = (e, _id, groupChat) => {
-    //     e.preventDefault();
-    //     console.log("Delete Chat", _id, groupChat)
-    // }
-   
+const Layout = (WrappedComponent: React.ComponentType<any>) => {  
     return (props: any) => {
         const dispatch = useDispatch();
         const customerController = new DataController("Customer");
@@ -24,8 +19,8 @@ const Layout = (WrappedComponent: React.ComponentType<any>) => {
 
         return (
             <div className="main-layout col">
-                <HeaderView />
-                <div className="row main-layout-body" style={{ width: "100%" }}>
+                <HeaderView />        
+                <div className="main-layout-body row">
                     <SideBarView />
                     <WrappedComponent {...props}/>
                 </div>

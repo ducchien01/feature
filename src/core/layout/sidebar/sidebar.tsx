@@ -11,29 +11,23 @@ export default function SideBarView() {
   const location = useLocation()
   const _modules = [
     {
-        id: "Chat",
-        path: ViewPath.Chat,
-        icon: <Winicon src='outline/user interface/send' size={'2rem'}/>,
-        selectedIcon: <Winicon src='fill/user interface/send' size={'2rem'}/>,
-    },
-    {
       id: "Chat",
       path: ViewPath.Chat,
       icon: <Winicon src='outline/user interface/send' size={'2rem'}/>,
       selectedIcon: <Winicon src='fill/user interface/send' size={'2rem'}/>,
-  },
-  {
-    id: "Chat",
-    path: ViewPath.Chat,
-    icon: <Winicon src='outline/user interface/send' size={'2rem'}/>,
-    selectedIcon: <Winicon src='fill/user interface/send' size={'2rem'}/>,
-},
-{
-  id: "Chat",
-  path: ViewPath.Chat,
-  icon: <Winicon src='outline/user interface/send' size={'2rem'}/>,
-  selectedIcon: <Winicon src='fill/user interface/send' size={'2rem'}/>,
-},
+    },
+    {
+      id: "Requests",
+      path: ViewPath.Requests,
+      icon: <Winicon src='outline/user interface/send' size={'2rem'}/>,
+      selectedIcon: <Winicon src='fill/accessibility/hide' size={'2rem'}/>,
+    },
+    {
+      id: "Archived",
+      path: ViewPath.Archived,
+      icon: <Winicon src='outline/files/archive-drawer' size={'2rem'}/>,
+      selectedIcon: <Winicon src='fill/files/archive-drawer' size={'2rem'}/>,
+    },
   ]
   const [selectedModule, setModule] = useState(_modules[0])
 

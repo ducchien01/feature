@@ -12,10 +12,10 @@ import { ToastContainer } from 'wini-web-components'
 import PrivateRoute from './core/module/auth/PrivateRoute';
 
 const LoginView = lazy(() => import('./core/module/login/login'));
-const Home = lazy(() => import('./core/module/home/home'));
+const Requests = lazy(() => import('./core/module/requests/requests'));
 const Chat = lazy(() => import('./core/module/chat/chat'));
-const Group = lazy(() => import('./core/module/group/group'));
-const NotFound = lazy(() => import('./core/module/NotFound/notfound'));
+const Archived = lazy(() => import('./core/module/archived/archived'));
+const NotFound = lazy(() => import('./core/module/not-found/notfound'));
 
 function App() {
   useEffect(() => {
@@ -31,9 +31,10 @@ function App() {
         <Route path="*" element={<NotFound />} />
         {/* Route cần bảo vệ */}
         <Route element={<PrivateRoute />}>
-          <Route path="/" element={ <Home /> } />
+          <Route path="/" element={ <Chat /> } />
           <Route path="/chat/:conversationId" element={ <Chat /> } />
-          <Route path="/group" element={ <Group /> }/>
+          <Route path="/requests" element={ <Requests /> }/>
+          <Route path="/archived" element={ <Archived /> }/>
         </Route>
       </Routes>
     </Suspense>

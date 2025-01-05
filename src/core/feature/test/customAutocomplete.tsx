@@ -102,7 +102,6 @@ export const AutocompleteCustom = ({onPlaceSelect}: Props) => {
                 errors={methods.formState.errors}
                 name={'TablePK'}
                 options={predictionResults.map(({place_id, description}) => {
-                  console.log(place_id, description)
                     return {
                         id: place_id,
                         name: description,

@@ -16,7 +16,6 @@ interface Props {
   }
 
 export const Directions = ({origin, destination}: Props ) => {
-    console.log("direction", origin, destination)
     const map = useMap();
     const routesLibrary = useMapsLibrary('routes');
     const [directionsService, setDirectionsService] =

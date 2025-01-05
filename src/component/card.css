@@ -1,8 +1,7 @@
 /* Avatar style */
-.avatar-container {
+  .avatar-container {
     display: flex;
     align-items: center;
-    gap: 10px;
     position: relative;
   }
   
@@ -10,9 +9,9 @@
     position: relative;
   }
   
-  .avatar-image {
-    width: 50px;
-    height: 50px;
+  .single-avatar-item {
+    width: 4.8rem;
+    height: 4.8rem;
     border-radius: 50%;
     object-fit: cover;
   }
@@ -23,42 +22,77 @@
     right: 2px;
     width: 12px;
     height: 12px;
-    background-color: #4caf50; /* Màu xanh cho online */
+    background-color: var(--secondary2-main-color); /* Màu xanh cho online */
     border: 2px solid white;
     border-radius: 50%;
   }
   
   .group-avatar {
-    display: flex;
     position: relative;
+    width: 4.8rem;
+    height: 4.8rem;
   }
   
-  .group-image {
+  .group-avatar-item {
     position: absolute;
-    width: 3rem;
-    height: 3rem;
+    width: 3.429rem;
+    height: 3.429rem;
     border-radius: 50%;
-    border: 2px solid white;
     object-fit: cover;
   }
   
-  .group-image:nth-child(1) {
-    left: 0;
+  .group-avatar-item:nth-child(1) {
+    left: 1.4rem;
   }
-  .group-image:nth-child(2) {
-    left: 15px;
+  .group-avatar-item:nth-child(2) {
+    top: 1.4rem;
+    border: 1px solid #fff;
   }
-  .group-image:nth-child(3) {
-    left: 30px;
-  }
-  
+
   .avatar-name {
     font-size: 14px;
     font-weight: bold;
   }
 
-/* Profile Style */
+  /* Conversation */
+  
+  .conversation-container {
+    display: flex;
+    /* position: relative; */
+    gap: 2rem;
+    align-items: center;
+    padding: 1.6rem 1.2rem;
+  }
+
+
+  .conversation-action {
+
+  }
+
+  .conversation-action {
+
+  }
+  
+  .isread-conversation {
+    width: 1.2rem;
+    height: 1.2rem;
+    background-color: var(--primary-main-color); /* Màu xanh cho online */
+    border-radius: 50%;
+  }
+
+  .hover-action {
+    justify-content: center;
+    align-items: center;
+    width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 50%;
+    background-color: #fff;
+  }
+
+  /* Chat Style */
+
+  /* Profile Style */
+  
   .profile-container {
     width: 20rem;
   }
-/* Chat Style */

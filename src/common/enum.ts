@@ -1,11 +1,10 @@
 export enum ViewPath {
-    Default = "/NewFeed",
-    NewFeed = '/NewFeed',
-    Community = '/Community',
-    Edu ="/Edu",
-    Ecom ="/Ecom",
-    Chat = "/chat",
-    Discovery = "/Discovery",
-    FormCreatePost = '/NewFeed/CreatePost',
-    PostsDetails = '/Posts',
+    Chat = "/chat/:chatId",
+    Requests = "/requests",
+    Archived = '/archived',
+}
+
+export enum ConversationType {
+    Private = 1, // chat 1-1
+    Group = 2, // group chat
 }

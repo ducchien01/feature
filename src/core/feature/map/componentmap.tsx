@@ -77,10 +77,7 @@ const ComponentMap = () => {
       setDestinationAddress(destination?.formatted_address); // Cập nhật tọa độ vào state center
     }
   },[origin, destination])
-
   
-console.log(positionSelected)
-
   return (
     <div style={{width: '600px', height: '400px'}}>
       <APIProvider apiKey={API_KEY}>

@@ -24,24 +24,11 @@ const GGMap = () => {
       });
     }
   };
-
-  // const debouncedHandleChange = debounce((center: google.maps.LatLngLiteral) => {
-  //   setPositionSelected(center);
-  // }, 3000); // Cập nhật sau mỗi 200ms
-  
-  // const handleChange = (e: any) => {
-  //   console.log(e)
-  //   const newCenter = e.detail.center as google.maps.LatLngLiteral;
-  //   debouncedHandleChange(newCenter);
-  // };
-
    const handleChange = (e: any) => {
-    console.log(e)
     setPositionSelected(e.detail.center);
   };
 
   const handleClick = (e: any) => {
-    console.log(e)
     setPositionSelected(e.detail.latLng);
   };
 

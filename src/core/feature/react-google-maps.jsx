@@ -81,7 +81,6 @@ export default function GgMap() {
 function Map() {
   const center = { lat: 21.028333, lng: 105.853333 }
   const [selected, setSelected] = useState(null);
-  console.log(selected)
   return (
       <>
           <div className="places-container" style={{width:'1000px', height:'200px'}}> 

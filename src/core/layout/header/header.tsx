@@ -29,7 +29,7 @@ export default function HeaderView() {
     })
   }
 
-  const showUserActions = (ev: any) => {  
+ const showUserActions = (ev: any) => {  
     const _box = ev.target.getBoundingClientRect()
     if (user) {
       showPopup({
@@ -41,7 +41,7 @@ export default function HeaderView() {
           ref={popupRef}
           user={user}
           logout={() => {
-            closePopup(popupRef)
+             closePopup(popupRef)
             dialogLogout()
           }}
         />
@@ -64,7 +64,6 @@ export default function HeaderView() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-
   return <div className={`header row ${showSideBar ? 'expand' : ''}`}>
     <Dialog ref={dialogRef} />
     <Popup ref={popupRef} />
@@ -73,42 +72,15 @@ export default function HeaderView() {
       <Winicon src='outline/user interface/send-message' size={'2rem'}/>
     </button>
     <div className="logo"></div>
-    {/* <div className='row search-all'>
-      {isLogin ? <TextField
-              className='search-default placeholder-2'
-              placeholder='Tìm kiếm trên eBig'
-              prefix={<Winicon src='fill/development/zoom' size={'1.6rem'}/>}
-              style={{ height: '4.8rem', width: '55.2rem' }}
-          /> : <></> 
-      }
-    </div>
-       <TextField
-                prefix={<Winicon src='fill/development/zoom' size={'1.6rem'}/>}
-                style={{ height: '4rem', padding: '0.8rem 1.6rem', margin: '0.4rem 0' }}
-                className="search-default body-3"
-                placeholder="Tìm kiếm bài viết"
-            />  */}
-    <div className="action row">
-      {/* <div ref={searchRef} onMouseEnter={() => setSearch(true)}>
-        {!search && ( 
-            <button type='button' className='row icon-button32'><Winicon src='fill/development/zoom' size={'2rem'}/></button>
-          )}
-          {search && ( 
-            <TextField
-              style={{ height: '4.8rem', width: '55.2rem' }}
-              className='search-all body-3'
-              placeholder='Tìm kiếm trên eBig'
-              prefix={<Winicon src='fill/development/zoom' size={'2rem'}/>}
-              suffix={<button type='button' className='row icon-button32 remove-search'><Winicon src='outline/user interface/c-remove' size={'2rem'} /></button>}
-            />)}                
-      </div > */}
+    <div className="row">
       {isLogin ?
-            <>
-                <button type='button' className='row icon-button32'><Winicon src='outline/user interface/bell' size={'2rem'}/></button>
-                <button type='button' onClick={showUserActions} style={{marginLeft: '1.2rem'}}>
-                    <img src={ConfigAPI.imgUrlId + user?.Img} alt='' style={{ width: '4rem', height: '4rem', borderRadius: '50%' }} />
-                </button>
-            </>  : <div  className='row' style={{ gap:'2.4rem' }}>
+        <div className='row' style={{ gap:'1.2rem' }}>
+          <button type='button' className='row icon-button32'><Winicon src='fill/development/zoom' size={'2rem'}/></button>
+          <button type='button' className='row icon-button32'><Winicon src='outline/user interface/bell' size={'2rem'}/></button>
+          <button type='button' onClick={showUserActions} style={{marginLeft: '1.2rem'}}>
+            <img src={ConfigAPI.imgUrlId + user?.Img} alt='' style={{ width: '4rem', height: '4rem', borderRadius: '50%' }} />
+          </button>
+        </div>  : <div  className='row' style={{ gap:'2.4rem' }}>
                     <button type='button' onClick={() =>{}} style={{borderRadius: '2.4rem'}}><Text className='button-text-3'>Đăng nhập</Text></button>
                     <button type='button' onClick={() =>{}} className=' button-primary' style={{borderRadius: '2.4rem'}}><Text className='button-text-3'>Đăng ký</Text></button>
                 </div>

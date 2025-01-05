@@ -175,8 +175,6 @@ function Directions() {
         directionRenderer?.setRouteIndex(routeIndex);
     }, [routeIndex, directionRenderer])
 
-    console.log(routes)
-
     if(!leg) return null;
 
     return (

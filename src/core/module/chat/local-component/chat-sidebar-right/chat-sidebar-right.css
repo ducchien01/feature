@@ -1,0 +1,41 @@
+
+.chat-container>.right-sidebar {
+    width: min(max(20%, 32rem), 36.2rem);
+    height: 100%;
+    min-width: 30rem;
+    max-width: 36.2rem;
+    position: sticky;
+    top: 0;
+} 
+  
+.chat-container>.right-sidebar {
+    border-left: var(--neutral-main-border);
+}
+
+.right-sidebar>.main {
+    flex: 1;
+    padding: 0 2.4rem;
+    bottom: 0;
+}
+
+.heading-info {
+    width: 100%;
+    align-items: center;
+    padding-top: 3.2rem;
+    padding-bottom: 1.6rem;
+}
+  
+.flie {
+    width: 100%;
+}
+  
+.participant {
+    width: 100%;
+}
+  
+.leave-group {
+    height: 7rem;
+    padding: 2.4rem;
+    border-top: var(--neutral-main-border);
+}
+  

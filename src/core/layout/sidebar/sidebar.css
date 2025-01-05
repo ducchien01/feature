@@ -3,11 +3,11 @@
     position: sticky;
     gap: 1.2rem;
     padding: 1.6rem;
-    border-right: var(--neutral-bolder-border-color);
+    border-right: var(--neutral-main-border);
     width: fit-content;
     height: calc(100vh - 8rem);
+    /* width: 84px; */
     max-width: 84px;
-    /* top: 8rem; */
     left: 0;
     overflow: auto;
     scrollbar-width: none;
@@ -19,7 +19,7 @@
 }
 
 .main-layout>.main-layout-body>.sidebar .sidebar-item.selected {
-    background-color: #00358014;
+    background-color: var(--neutral-selected-background-color);
 }
 
 /* support-action-sidebar */
