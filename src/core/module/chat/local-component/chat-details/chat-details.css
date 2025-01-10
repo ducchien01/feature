@@ -27,13 +27,48 @@
 }
   
 .message-input {
-    gap: 2.4rem;
+    gap: 1rem;
     width: 100%;
     padding: 1.6rem 3.2rem;
-    max-height: 7.2rem;
-    height: 7.2rem;
     position: sticky;
     bottom: 0;
     z-index: 10;
+    overflow: hidden;
+    transition: height 0.2s ease;
+    /* height: 100%; */
+    /* flex :1 ; */
+    /* max-height: 7.2rem; */
+    /* height: 7.2rem; */
 }
   
+.media {
+    
+}
+
+.media>.media-file{
+    
+}
+
+.media>.media-voice {
+    
+}
+
+.file-preview {
+    overflow-x: auto; /* Thanh cuộn ngang */
+    gap: 0.8rem;
+    padding: 0.8rem 0;
+    max-width: 100%;
+  }
+
+  /* .file-preview::-webkit-scrollbar {
+    width: 1px;
+  } */
+  
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem;
+    border-radius: 1rem;
+    flex-shrink: 0; /* Đảm bảo không bị co lại */
+  }

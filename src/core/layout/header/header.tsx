@@ -7,11 +7,14 @@ import { RootState } from '../../../store';
 import { useNavigate } from 'react-router-dom';
 // import { showLoginPopup } from '../../../router/router';
 import ConfigAPI from '../../../common/config'
+import { CustomerActions } from '../../reducer/customer/reducer';
+import useSocket from '../../../socket';
 
 export default function HeaderView() {
-  const user = useSelector((state: RootState) => state.customer.data)
+  const user = useSelector((state: RootState) => state.customer.data);
+  const socket = useSocket(user?.Id);
   const customerController = new DataController("Customer");
-  const [search, setSearch] = useState(false)
+  const [search, setSearch] = useState(false);
   const isLogin = customerController.token() ? true : false;
   const dialogRef = useRef<any>();
   const popupRef = useRef<any>();  
@@ -25,7 +28,9 @@ export default function HeaderView() {
         alignment: DialogAlignment.center,
         status: ComponentStatus.WARNING,
         title: 'Bạn chắc chắn muốn đăng xuất',
-        onSubmit: customerController.logout,
+        // onSubmit: customerController.logout,
+        onSubmit: CustomerActions.logout
+        
     })
   }
 

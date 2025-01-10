@@ -1,7 +1,7 @@
 export default class Config {
     static url = 'http://localhost:3000/api/'
     // static url = 'https://server.wini.vn/api/'
-    // static url = 'https://apicore.wini.vn/api/'
+    static uploadUrl = 'https://apicore.wini.vn/api/'
     static fileUrl = "https://file-mamager.wini.vn/api/";
     static imgUrl = "https://file-mamager.wini.vn/";
     // static imgUrlId = "https://file-mamager.wini.vn/api/SystemFile/img/";

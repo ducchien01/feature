@@ -725,3 +725,21 @@ export const fileFormat = (url) => {
 
 export const transformUrl = (url = "", width = 100) => url;
 
+// export function replaceEmojis(text) {
+//     const regex = new RegExp(
+//         `(${Object.keys(emojiMap)
+//             .map((key) => key.replace(/([.*+?^${}()|[\]\\])/g, "\\$1"))
+//             .join("|")})`,
+//         "g"
+//     );
+    
+//     const parts = text.split(regex);
+
+//     return parts.map((part, index) =>
+//         emojiMap[part] ? (
+//             <Winicon key={index} src={emojiMap[part]} size={ "4rem"} />
+//         ) : (
+//             <span key={index}>{part}</span>
+//         )
+//     );
+// };

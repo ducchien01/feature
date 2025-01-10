@@ -1,10 +1,12 @@
 import './card.css'
-import { CSSProperties, forwardRef, memo, useRef, useState } from "react"
+import { CSSProperties, forwardRef, memo, useEffect, useRef, useState } from "react"
 // import { FieldErrors, FieldValues, UseFormRegister } from "react-hook-form"
-import {  NavLink } from "react-router-dom"
+import {  NavLink, useParams } from "react-router-dom"
 import { TextField, Text, showPopup, Winicon, closePopup, Popup } from "wini-web-components"
 import { fileFormat, transformUrl } from "../common/Utils"
 import Config from "../common/config"
+import { ConversatioStatus, ConversationType, emojiMap } from '../common/enum'
+import { WiniIconName } from 'wini-web-components/dist/component/wini-icon/winicon'
 
 type ConversationCardProps= {
     id?: string;
@@ -23,9 +25,11 @@ type ConversationCardProps= {
 };
 
 export function ConversationCard({ id, className, name, listImg, isGroup, isOnline, isRead, newMessage, lastMessageTime, style }: ConversationCardProps) {
-    const popupRef = useRef<any>();  
+    const popupRef = useRef<any>(); 
+    const { conversationId } = useParams();
     const [isHovered, setIsHovered] = useState(false); // Trạng thái để kiểm tra hover
-
+    // const [isSelected, setSelected] = useState<boolean>(false);
+    
     const showConversationActions = (ev: any) => {  
         const _box = ev.target.getBoundingClientRect()
           showPopup({
@@ -43,7 +47,8 @@ export function ConversationCard({ id, className, name, listImg, isGroup, isOnli
         })
     }
 
-    return <div className={className ?? "row"}
+    // return <div className={className ?? `row ${isSelected ? 'selected' : ''}`}
+    return <div className={className ?? `row`}
                 style={{
                 width: "100%",
                 gap: "1.6rem",
@@ -57,7 +62,12 @@ export function ConversationCard({ id, className, name, listImg, isGroup, isOnli
                 borderRadius: "0.8rem",
                 ...(style ?? {}),
                 }}
-                onMouseEnter={() => setIsHovered(true)}
+                onMouseEnter={() => {
+                    // if(id === conversationId) {
+                    //     setSelected(true)
+                    // } else setSelected(false)
+                    setIsHovered(true)
+                }}
                 onMouseLeave={() => {
                     setIsHovered(false);
                     closePopup(popupRef);
@@ -109,6 +119,7 @@ export function AvatarCard({ listImg = [], name, isOnline = false, isGroup = fal
                 {listImg.slice(0, 2).map((img, index) => (
                     img && <img key={index} src={Config.imgUrlId + img} alt={`group-${index}`} className="group-avatar-item" />
                 ))}
+                 {isOnline && <span className="online-indicator"></span>}
             </div>) : (
             <div className="single-avatar">
                 {listImg[0] && <img src={transformUrl(Config.imgUrlId + listImg[0])} alt={name} className="single-avatar-item" />} 
@@ -141,13 +152,33 @@ type MessageCardProps = {
     // dateCreated?: any;
 }
 
-export function MessageCard({message, customers, user}: MessageCardProps) {
-    const {CustomerId, Content, attachments = []} = message;
-    const isUser = CustomerId === user?.Id;
+
+const replaceEmojis = (text: string): JSX.Element[] => {
+    const regex = new RegExp(
+        `(${Object.keys(emojiMap)
+            .map((key) => key.replace(/([.*+?^${}()|[\]\\])/g, "\\$1"))
+            .join("|")})`,
+        "g"
+    );
     
-    return <div className={"row"} style={{ width:"100%", alignItems:"flex-start", justifyContent: isUser ? "flex-end" : "flex-start" }}>
+    const parts = text.split(regex);
+
+    return parts.map((part, index) =>
+        emojiMap[part] ? (
+            <Winicon key={index} src={emojiMap[part] as WiniIconName} size={ "4rem"} />
+        ) : (
+            <span key={index}>{part}</span>
+        )
+    );
+};
+
+
+export function MessageCard({message, customers, user}: MessageCardProps) {
+    const { Id, CustomerId, Content, MediaUrl, Type = []} = message;
+    const isUser = CustomerId === user?.Id;
+    return <div className={"row"} style={{ width:"100%", alignItems:"flex-end", justifyContent: isUser ? "flex-end" : "flex-start", gap:"1.2rem" }}>
                {!isUser && <AvatarCard listImg={customers.map((e: any) => e?.Img)}/>} 
-                {Content && <Text 
+                {Type === 1 && Content && <Text 
                     className="body-3" 
                     style={{ 
                         justifySelf: isUser ? "flex-end" : "flex-start",
@@ -162,36 +193,69 @@ export function MessageCard({message, customers, user}: MessageCardProps) {
                         whiteSpace: "pre-wrap" // Đảm bảo xuống dòng đúng cách
                     }}
                 >
-                    {Content}
+                    {replaceEmojis(Content)}
                 </Text>}
-                {attachments.length > 0 && 
-                    attachments.map((attachment: any, index: any) => {
-                        const url = attachment.url;
-                        const file = fileFormat(url);
-                        
-                        return <div key={`c-${index}`}>
-                            <a 
-                                href={url}
-                                download
-                                target="_blank"
-                                style={{color:"black"}}
-                            >
-                                {RenderAttachement(file, url)}
-                            </a>
-                        </div>
-                    })
-                }
+                {Type === 2 && MediaUrl  && <div key={`img-${Id}`}>
+                    {RenderAttachement("image", MediaUrl)}
+                </div>}
+                {Type === 3 && MediaUrl  && <div key={`vd-${Id}`}>
+                    {RenderAttachement("video", MediaUrl)}
+                </div>}
         </div>
 }
 
 const RenderAttachement = (file: string, url: string) => {
     switch (file) {
         case "video":
-            return <video src={url} preload="none" width={"200px"} controls/>
+            return <div 
+            style={{ 
+                borderRadius: "8px",
+                maxWidth: "52.3rem",
+                width: "100%",
+                overflow: "hidden",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", // Hiệu ứng đổ bóng
+                position: "relative",
+                // borderTop:"var(--shadow-top)",
+                // borderBottom:"var(--shadow-bottom)",
+                // borderLeft:"var(--shadow-left)",
+                // borderRight:"var(--shadow-right)",
+            }}
+        >
+            <video 
+                src={Config.imgUrlId + url} 
+                width="100%" 
+                height="auto" 
+                style={{ display: "block" }} // Đảm bảo video không bị margin hay padding
+                controls 
+                playsInline 
+                autoPlay 
+                loop 
+                muted 
+            />
+        </div>
+            
         case "image":
-            return <img src={transformUrl(url, 200)} alt="Attachement" width={"200px"} height={"150px"} style={{ objectFit:"contain" }}/>
+            return <div 
+            style={{ 
+                borderRadius: "8px",
+                // width: "14.8rem",
+                // height: "14.8rem",
+                maxWidth: "14.8rem",
+                maxHeight: "14.8rem",
+                width: "100%",
+                overflow: "hidden",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", // Hiệu ứng đổ bóng
+                position: "relative",
+                // borderTop:"var(--shadow-top)",
+                // borderBottom:"var(--shadow-bottom)",
+                // borderLeft:"var(--shadow-left)",
+                // borderRight:"var(--shadow-right)",
+            }}
+        >
+            <img src={Config.imgUrlId + transformUrl(url, 200)} alt="Attachement" width={"100%"} height={"100%"} style={{ objectFit:"contain" }}/>
+        </div>
         case "audio":
-            return <audio src={url} preload="none" controls/>
+            return <audio src={Config.imgUrlId + url} preload="none" controls/>
         default:
             return <div>default</div>
     }

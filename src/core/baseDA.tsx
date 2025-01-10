@@ -190,12 +190,12 @@ export class BaseDA {
     static uploadFiles = async (listFile: Array<File>) => {
         listFile = [...listFile];
         // const headersObj: any = await getHeaders()
-        const headersObj: any = {}
+        const headersObj: any = { pid: ConfigApi.ebigId }
         const formData = new FormData();
         listFile.forEach(e => {
             formData.append("files", e);
         })
-        const response = await BaseDA.postFile(ConfigApi.fileUrl + 'SystemFileAuth/Upload', {
+        const response = await BaseDA.postFile(ConfigApi.uploadUrl + 'file/uploadfiles', {
             headers: headersObj,
             body: formData,
         })

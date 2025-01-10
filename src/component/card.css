@@ -96,3 +96,8 @@
   .profile-container {
     width: 20rem;
   }
+
+  /* .list-conversation>.selected {
+    background-color: var(--neutral-selected-background-color);
+    background-color: red;
+  }  */
