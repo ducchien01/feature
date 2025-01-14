@@ -62,12 +62,15 @@ export const PopupAddGroup = forwardRef(function PopupAddGroup(data: { user: any
     } 
 
     const createConversation = async (memberList: Array<any>) => {
+        debugger
         const listParticipant: Array<any> = [];
         const newConversation = {
             Id: randomGID(),
-            Name: methods.getValues("group-name"),
-            ChannelId: methods.getValues("group-name"),
-            Type: 2,
+            // Name: methods.getValues("group-name"),
+            // ChannelId: methods.getValues("group-name"),
+            Name: "",
+            ChannelId: "",
+            Type: 1,
             Sort: 1,
             DateCreated: (new Date()).getTime(),
         }
@@ -77,6 +80,7 @@ export const PopupAddGroup = forwardRef(function PopupAddGroup(data: { user: any
             Name: `Member-${data.user.Name}-${newConversation.Id}`,
             ConversationId: newConversation.Id,
             CustomerId: data.user.Id,
+            Status: 1,
             DateCreated: (new Date()).getTime(),
         };
         listParticipant.push(userParticipant);
@@ -87,6 +91,7 @@ export const PopupAddGroup = forwardRef(function PopupAddGroup(data: { user: any
                 Name: `Member-${mem.Name}-${newConversation.Id}`,
                 ConversationId: newConversation.Id,
                 CustomerId: mem.Id,
+                Status: 1,
                 DateCreated: (new Date()).getTime(),
             };
             listParticipant.push(newParticipant);
@@ -106,20 +111,20 @@ export const PopupAddGroup = forwardRef(function PopupAddGroup(data: { user: any
 
     return <div className="col more-action-popup" style={{ padding: "1.2rem 2.4rem", gap:"2.4rem", width: "40%", height:"80%"}}>
         <div className="row" style={{ gap: "0.8rem", padding: "0.8rem", paddingLeft: "2.4rem" }}>
-            <Text className="heading-7" style={{ flex: 1 }}>Tạo nhóm</Text>
+            <Text className="heading-7" style={{ flex: 1 }}>Gửi tin nhắn</Text>
             <button type="button" className="row icon-button32" onClick={() => { closePopup(ref) }}>
                 <Winicon src={"fill/user interface/e-remove"} size={"2.4rem"} />
             </button>
         </div>
         <div className="col" style={{ flex: 1, gap: "1rem" }}>
-            <TextFieldForm
+            {/* <TextFieldForm
                 required
                 style={{ flex: 1 }}
                 name={"group-name"}
                 placeholder={"Tên group"}
                 register={methods.register}
                 errors={methods.formState.errors}
-            />
+            /> */}
             <div className="col">
                 <TextField
                     className="search-default body-3"

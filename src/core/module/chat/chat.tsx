@@ -6,34 +6,46 @@ import ChatSideBarRight from './local-component/chat-sidebar-right/chat-sidebar-
 import ChatDetails from './local-component/chat-details/chat-details';
 import { DataController } from '../../baseController';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import useSocket from '../../../socket';
 import { CustomerActions } from '../../reducer/customer/reducer';
+import { ConversationActions } from '../../reducer/conversation/reducer';
 
 const Chat = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const { conversationId } = useParams();
     const user = useSelector((state: any) => state.customer.data);
     const socket = useSocket(user?.Id);
     const conversationController = new DataController("Conversation");
     const participantController = new DataController("Participant");
     const [onlineUsers, setOnlineUsers] = useState<Array<any>>([]);
     const [conversations, setConversations] = useState<Array<any>>([]);
-   
+    
     const getData = async () => {
-       const res = await participantController.getListSimple({
+        const res = await participantController.getListSimple({
             page: 1,
             size: 100,
-            query: `@CustomerId:{${user?.Id}}`,
+            query: `@CustomerId:{${user?.Id}} @Status:[1 1]`,
         })
         
         const conversationIds = res.data.map((e) => e.ConversationId);
-             
-        const cvRes = await conversationController.getByListId(conversationIds);
+        const cvRes = await conversationController.getListSimple({
+            page: 1,
+            size: 15,
+            query:`@Id:{${conversationIds.join(" | ")}}`,
+            sortby: {
+                BY: "LastMessageTime",
+                DIRECTION:"DESC"
+            }
+        })
         setConversations(cvRes.data);
-        navigate(`/chat/${cvRes.data[0]?.Id}`);
-            
+        if (cvRes.data.length > 0) {
+            navigate(`/chat/${cvRes.data[0]?.Id}`);
+        }
+        ConversationActions.getConversation(dispatch, cvRes.data[0]?.Id);
         CustomerActions.getParticipantByConversation(dispatch, { conversationIds: conversationIds, userId:user?.Id })
+        ConversationActions.getConversationMember(dispatch, cvRes.data[0]?.Id, user?.Id);
     };
     
     useEffect(() => {
@@ -51,7 +63,7 @@ const Chat = () => {
     
         return () => {
             socket.off('online-users', handleOnlineUsers);
-            socket.disconnect(); // Ensure no other components use the same instance
+            socket.disconnect(); 
         };
     }, [socket]);
 
@@ -60,24 +72,22 @@ const Chat = () => {
         getData();
     }, [user])
 
-    // useEffect(() => {
-    //     if (!conversations.length || firstNavigation.current) return;
-    //     firstNavigation.current = true;
-    //     if (conversations[0]?.Id) {
-    //         navigate(`/chat/${conversations[0].Id}`);
-    //     }
-    // }, [conversations]);
-
+    useEffect(() => {
+        if(!conversationId) return;
+        ConversationActions.getConversationMember(dispatch, conversationId, user?.Id);
+    }, [conversationId])
     return <div className="chat-container row">
         <ChatSideBarLeft 
             socket={socket} 
             onlineUsers={onlineUsers} 
             conversations={conversations}
+            setConversations={setConversations}
         />
         <ChatDetails 
             user={user} 
             socket={socket} 
             onlineUsers={onlineUsers}
+            setConversations={setConversations}
         />
         {/* <ChatSideBarRight 
             user={user} 

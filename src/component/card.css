@@ -101,3 +101,15 @@
     background-color: var(--neutral-selected-background-color);
     background-color: red;
   }  */
+
+  /* Ẩn các phần tử con mặc định */
+.mess-card .reaction-container,
+.mess-card .reply-container {
+  display: none;
+}
+
+/* Hiển thị các phần tử con khi hover lên parent */
+.mess-card:hover .reaction-container,
+.mess-card:hover .reply-container {
+  display: block;
+}

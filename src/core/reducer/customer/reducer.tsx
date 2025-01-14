@@ -102,7 +102,7 @@ export class CustomerActions {
                 type: 'GETPARTICIPANTCUSTOMER',
                 data: resCus.data.filter((e, index, arr) => arr.findIndex(obj => obj.Id === e.Id) === index)}))
         }
-        return res
+        return resCus
     }
 
     static login = async (props: { UserName: string, PassWord: string }) => {

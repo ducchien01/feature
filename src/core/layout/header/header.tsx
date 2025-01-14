@@ -42,7 +42,7 @@ export default function HeaderView() {
         clickOverlayClosePopup: true,
         hideButtonClose: true,
         style: { top: `${_box.y + _box.height + 2}px`, right: `${document.body.offsetWidth - _box.right}px`, position: 'absolute', width: 'fit-contents' },
-        content: <PopupUserActions
+        body: <PopupUserActions
           ref={popupRef}
           user={user}
           logout={() => {

@@ -1,39 +1,190 @@
 import './chat-details.css'
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { AvatarCard, MessageCard } from "../../../../../component/card";
 import {  useForm } from "react-hook-form";
-import {Winicon, Text, TextArea } from "wini-web-components";
+import {Winicon, Text, TextArea, showPopup, Popup } from "wini-web-components";
 import { useParams } from "react-router-dom";
 import { DataController } from "../../../../baseController";
-import { Ultis, randomGID } from "../../../../../common/Utils";
+import { randomGID } from "../../../../../common/Utils";
 import { BaseDA } from '../../../../baseDA';
-import { emojiMap } from '../../../../../common/enum';
+import { ConversatioStatus, ConversationType, emojiMap } from '../../../../../common/enum';
 import { WiniIconName } from 'wini-web-components/dist/component/wini-icon/winicon';
 import { useSelector } from 'react-redux';
+import EmojiPicker, { EmojiStyle } from 'emoji-picker-react';
 
-const ChatDetails = ({user, socket, onlineUsers }) => {
+const ChatDetails = ({user, socket, onlineUsers, setConversations }) => {
     const { conversationId } = useParams();
+    const ref = useRef<any>()
+    const textAreaRef = useRef<any>(null);
     const methods = useForm({ shouldFocusError: false });
     const messageController = new DataController("Message");
+    const conversationController = new DataController("Conversation");
+    const members = useSelector((state: any) => state.conversation.dataConversationMember);
     const customers = useSelector((state: any) => state.customer.dataParticipantCustomer);
-    const participants = useSelector((state: any) => state.customer.dataParticipant);
-    const conversation = useSelector((state: any) => state.conversation.data);
-
-    // state API
+    const participant = useSelector((state: any) => state.customer.dataParticipant);
+   
+    // const [members, setMember] = useState<Array<any>>([]);
     const [messages, setMessages] = useState<Array<any>>([]);
-    const [customersConversation, setCustomersConversation] = useState<Array<any>>([]);
-    
+    const [conversation, setConversation] = useState<any>();
     //state component
     const [selectdFilePreview, setSelectdFilePreview] = useState<Array<any>>([]);
     const [isSending, setIsSending] = useState(false);
     const [pinMessage, setPinMessage] = useState<Array<any>>([]);
     const [isOnline, setIsOnline] = useState<boolean>(true);
     const [userLastActive, setUserLastActive] = useState<any>();
+    // const [isTyping, setIsTyping] = useState(false);
+    // const [typingInfo, setTypingInfo] = useState(null);
+    const [typingUsers, setTypingUsers] = useState<Array<any>>([]);
+    const SendMessage = async (ev: any) => {
+        if (isSending) return;
+        setIsSending(true);
+        if (!ev?.message?.trim() && !selectdFilePreview?.length) {
+            return; 
+        }
+        // setIsSending(true);
+        const listMessage: Array<any> = [];
+        const newMessage =  {
+            Id: randomGID(),
+            Name: "new_message",
+            CustomerId: user?.Id,
+            Content: ev?.message,
+            ConversationId: conversationId,
+            Sort: 1,
+            Status: 1,
+            Type: 1,
+            DateCreated: (new Date()).getTime()
+        }
+        listMessage.push(newMessage);
+        try {
+            if (selectdFilePreview?.length) {
+                const uploadedFiles = await uploadFiles(selectdFilePreview);
+                if (uploadedFiles) { 
+                    uploadedFiles.forEach((file: any) => {
+                        const newMessageMedia =  {
+                            Id: randomGID(),
+                            Name: "media",
+                            CustomerId: user?.Id,
+                            Content: "",
+                            ConversationId: conversationId,
+                            Sort: 1,
+                            MediaUrl: file.Id,
+                            Status: 1,
+                            Type: file.Type === "video/mp4" ? 3 : 2,
+                            DateCreated: (new Date()).getTime()
+                        };
+                        listMessage.push(newMessageMedia);
+                    })
+                }
+            } 
+            
+            const sentMediaMessages = await Promise.all(
+                listMessage.map((message) => sendSocketMessage(message))
+            );
+            setMessages((prev) => [...prev, ...sentMediaMessages]);
+            
+        } catch (error) {
+            console.error("Error sending message:", error);
+        } finally {
+            setIsSending(false);
+            methods.setValue("message","");
+            setSelectdFilePreview([]);
+        }
+    }
+        
+    const sendSocketMessage = (message) => {
+        return new Promise((resolve, reject) => {
+            socket.emit("send_message", message , (response: any) => {
+                if (response?.success) {
+                    resolve(message); 
+                } else {
+                    reject(response?.error); 
+                }
+            });
+        });
+    };
+
+    const handleAvatar = () => {
+        debugger
+        let imgs = Array<any>([]);
+        let isOnline = false;
+        let isGroup = false;
+        let name = "";
+        let lastActive: any;
+        if (conversation?.Type === ConversationType.Group && members?.length > 1) {
+            if (conversation?.Img){ 
+                imgs = Array(conversation?.Img);
+            } else {
+                imgs = members.map(e => e?.Img);
+            }
+            if(conversation?.Status === ConversatioStatus.Online) isOnline = true;
+            isGroup = true;
+            name = conversation?.Name;
+        } else if (conversation?.Type === ConversationType.Private && members?.length === 1) {
+            if (onlineUsers.includes(members[0]?.Id)) {
+                isOnline = true;
+            }
+            imgs = members?.map(e => e?.Img);
+            isGroup = false;
+            name = members[0]?.Name;
+            lastActive= members[0]?.LastActive
+        }
+       
+        return {
+            name: name,
+            isOnline: isOnline,
+            isGroup: isGroup,
+            imgs: imgs, 
+            lastActive: lastActive
+        }
+    }
+    const handleEmojiClick = (emojiData) => {
+        // Lấy vị trí con trỏ
+        const textarea = textAreaRef.current.getTextarea()!;
+     
+        if (textarea) {
+            const startPos = textarea.selectionStart;
+            const endPos = textarea.selectionEnd;
+            const currentValue = textarea.value;
+            
+            const newMessage = currentValue.substring(0, startPos) + emojiData.emoji + currentValue.substring(endPos);
+
+            methods.setValue("message", newMessage);
+            textarea.focus();
+
+            const newCaretPos = startPos + emojiData.emoji.length;
+            textarea.setSelectionRange(newCaretPos, newCaretPos);
+        }
+      
+    };
+
+    const showEmojiPicker = (ev: any) => {
+        const _box = ev.target.getBoundingClientRect()
+        showPopup({                  
+            ref: ref,
+            style: { 
+                top: `${_box.top - 50}px`,
+                left: `${_box.left - 350}px`,
+                position: "absolute", 
+                width: "fit-contents" 
+            },
+            clickOverlayClosePopup:true,
+            hideButtonClose:false,
+            body: <EmojiPicker
+            onEmojiClick={handleEmojiClick} 
+            emojiStyle={EmojiStyle.APPLE} // Emoji set (Google, Apple, Twitter)
+            lazyLoadEmojis={true}
+            skinTonesDisabled={false} // Enable skin tone selection
+            autoFocusSearch={false}
+            onSkinToneChange ={ (e) => console.log("onSkinToneChange",e)}
+            onReactionClick={(e) => console.log("onReactionClick",e)} 
+        />
+        })
+    }
 
     const getMessage = async () => {
         try {
             await messageController.getListSimple({
-                page: 1, 
+                page: 1,    
                 size: 20,
                 query: `@ConversationId:{${conversationId}}`,
                 sortby: { BY: "DateCreated", DIRECTION:"ASC"}
@@ -45,11 +196,15 @@ const ChatDetails = ({user, socket, onlineUsers }) => {
         }
     }
 
-    const getCustomerConversation = () => {
-        const customerConversation = participants?.filter((e: any) => e.ConversationId === conversationId).map((e: any) => e.CustomerId);
-        setCustomersConversation(customers?.filter((e: any) => customerConversation?.includes(e.Id)));
+    const getConversation = async () => {
+        try {
+          const res =  await conversationController.getById(conversationId as string);
+          setConversation(res.data);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
     }
-  
+
     const handleFilePreview = (event) => {
         const files = Array.from(event.target.files);
         const newFiles = files.map((file: any, index) => ({
@@ -65,159 +220,172 @@ const ChatDetails = ({user, socket, onlineUsers }) => {
     const handleRemoveFilePreview = (id: string) => {
         setSelectdFilePreview((prev) => prev.filter((file) => file.id !== id));
     };
-
-    const SendMessage = async (ev: any) => {
-        if (isSending) return;
-        setIsSending(true);
-        const listMessage: Array<any> = [];
-        
-        const newMessage =  {
-            Id: randomGID(),
-            Name: "new_message",
-            CustomerId: user?.Id,
-            Content: ev?.message,
-            ConversationId: conversationId,
-            Sort: 1,
-            Status: 1,
-            Type: 1,
-            DateCreated: (new Date()).getTime(),
+  
+    const uploadFiles = async (files) => {
+        try {
+            const uploadRes = await BaseDA.uploadFiles(files.map((file) => file.file));
+            if (!uploadRes) throw new Error("Upload failed");
+            return uploadRes;
+        } catch (error) {
+            console.error("Error uploading files:", error);
+            throw error; 
         }
-
-        if (selectdFilePreview?.length) {
-            const uploadRes = await BaseDA.uploadFiles(selectdFilePreview.map(e => e.file));
-            if (uploadRes) { 
-                uploadRes.map((e: any) => {
-                    const newMessageMedia =  {
-                        Id: randomGID(),
-                        Name: "new_message_video",
-                        CustomerId: user?.Id,
-                        Content: "",
-                        ConversationId: conversationId,
-                        Sort: 1,
-                        MediaUrl: e.Id,
-                        Status: 1,
-                        Type: 3,
-                        DateCreated: (new Date()).getTime()
-                    }
-
-                    if(e.Type === "video/mp4") {
-                        newMessageMedia.Type = 3;
-                    } else {
-                        newMessageMedia.Type = 2;
-                    }
-                    listMessage.push(newMessageMedia);
-                })
-            }
-        } 
-
-        socket.emit("send_message", newMessage, (response: any) => {
-            if (response?.success) {
-                // Tin nhắn đã gửi thành công, cập nhật frontend
-                setMessages((list) => [...list, newMessage]);
-            } else {
-                console.error("Failed to send message:", response?.error);
-            }
-            
-            setIsSending(false); 
-        });
-
-        Promise.all(
-            listMessage.map((message) => {
-                return new Promise((resolve, reject) => {
-                    socket.emit("send_message", message, (response: any) => {
-                        if (response?.success) {
-                            resolve(message); 
-                        } else {
-                            reject(response?.error); 
-                        }
-                    });
-                });
-            })
-        )
-        .then((sentMessages) => {
-            setMessages((list) => [...list, ...sentMessages]);
-        })
-        .catch((error) => {
-            console.error("Failed to send one or more messages:", error);
-        })
-        .finally(() => {
-            setIsSending(false); 
-        });
-
-        methods.setValue("message","");
-        setSelectdFilePreview([]);
-    }
+    };
 
     useEffect(() => {   
         if (!socket) return; 
 
         socket.on("receive_message", (data) => {
-            setMessages((prev) => [...prev, data]);
+            console.log(data)
+            if(data.ConversationId !== conversationId) {
+                setMessages((prev) => [...prev, data]);
+            }
+
+            const updatedConversation = {
+                ...conversation.find(e=>e.Id === conversationId),
+                LastMessage: data.Content ,
+                LastMessageTime: data.DateCreated,
+            };
+
+            setConversations((prevConversations: any[]) => {
+                // Đưa conversation lên đầu danh sách
+                const filteredConversations = prevConversations.filter((conv) => conv.Id !== conversationId);
+                return [updatedConversation, ...filteredConversations];
+            });
         });
-   
+        // socket.on("last_active", (data) => {
+        //     console.log(data)
+        // })
+        const handleUserTyping = ({ senderId }) => {
+            setTypingUsers((prev) => [...new Set([...prev, senderId])]);
+        };
+    
+        const handleUserStopTyping = ({ senderId }) => {
+            setTypingUsers((prev) => prev.filter((id) => id !== senderId));
+        };
+    
+        socket.on("userTyping", handleUserTyping);
+        socket.on("userStopTyping", handleUserStopTyping);
+
         return () => {
             socket.off('last_active');
+            socket.off("userTyping", handleUserTyping);
+            socket.off("userStopTyping", handleUserStopTyping);
             socket.disconnect();
         };
     },[socket])
 
     useEffect(() => {
         if(!conversationId) return;
-        
+        getConversation();
         getMessage();
-        getCustomerConversation();
-
-        if(!socket) return;
-        if(conversation?.Type === 1) {
-
-            const idCus = customersConversation?.find((e: any) => e.Id !== user?.Id)
-            socket.emit('request_last_active', idCus);
-            socket.on('last_active', (data) => {
-                console.log(`User ${data.userId} last active at: ${data.lastActiveTime}`);
-                setUserLastActive(data.lastActiveTime)
-            });
-            if(!onlineUsers.includes(idCus)) {
-                setIsOnline(false);
-            }
-        }
     },[conversationId])
+
+    useEffect(() => {
+        const textarea = textAreaRef.current.getTextarea()!;
+        
+        if(textarea) {
+            // const textarea = textAreaRef.current.getTextarea()!;
+            // const message = methods.getValues("message");
+              // Gửi sự kiện "đang nhập"
+            // const handleTyping = () => {
+            //     socket.emit("typing", { targetUserIds, senderId: userId });
+            // };
+
+            // // Gửi sự kiện "dừng nhập"
+            // const handleStopTyping = () => {
+            //     socket.emit("stopTyping", { targetUserIds, senderId: userId });
+            // };
+            const memberIds = members?.map(e => e.Id) ?? [];
+            const handleKeyDown = (ev) => {
+                debugger
+                if (ev.key.toLowerCase() === "enter") {
+                  ev.preventDefault(); // Chặn hành vi xuống dòng mặc định
+                  methods.handleSubmit(SendMessage)(); // Gửi tin nhắn
+                  textarea.style.height = "auto"; // Reset chiều cao sau khi gửi
+                  socket.emit("stop-typing", {targetUserIds: memberIds , senderId: user?.Id });
+                }
+               
+            };
+            const handleKeyUp = (ev) => {
+                debugger
+                socket.emit("typing", { targetUserIds: memberIds, senderId: user?.Id });
+            };
+            textarea.style.padding = "1rem 0 1rem 0";
+            textarea.addEventListener("keydown", handleKeyDown);
+            textarea.addEventListener("keyup", handleKeyUp);
+            return () => {
+                textarea.removeEventListener("keydown", handleKeyDown);
+                textarea.removeEventListener("keyup", handleKeyUp);
+            };
+        }
+    },[SendMessage])
    
+    // useEffect(() => {
+    //     if (!socket) return;
+    //     // Lắng nghe sự kiện "đang nhập"
+    //     socket.on("userTyping", ({ senderId }) => {
+    //       setTypingUsers((prev) => [...new Set([...prev, senderId])]);
+    //     });
+    
+    //     // Lắng nghe sự kiện "dừng nhập"
+    //     socket.on("userStopTyping", ({ senderId }) => {
+    //       setTypingUsers((prev) => prev.filter((id) => id !== senderId));
+    //     });
+    
+    //     // Cleanup khi unmount
+    //     return () => {
+    //       socket.off("userTyping");
+    //       socket.off("userStopTyping");
+    //     };
+    // }, [user?.Id]);
+
+    useEffect(() => {
+        if (!socket) return;
+        // Lắng nghe sự kiện "đang nhập"
+        socket.on("userTyping", (data) => {
+          setTypingUsers((prev) => [...new Set([...prev, data.senderId])]);
+        });
+    
+        // Lắng nghe sự kiện "dừng nhập"
+        socket.on("userStopTyping", (data) => {
+          setTypingUsers((prev) => prev.filter((id) => id !== data.senderId));
+        });
+    
+        // Cleanup khi component unmount
+        return () => {
+          socket.off("userTyping");
+          socket.off("userStopTyping");
+        };
+      }, []);
+    
+
     return  <div className="col main-chat">
+        <Popup ref={ref} />
         <div className="header-chat row" style={{ gap: "1.6rem", padding:"1.6rem" }}>
-            {conversation?.Type === 1 ? <>
                 <AvatarCard 
-                    key={conversation?.Id} 
-                    listImg={[customersConversation?.find((e: any) => e.Id !== user?.Id)?.Img]} 
-                    isOnline={isOnline} 
-                    isGroup={false} 
+                    key={conversationId} 
+                    listImg={handleAvatar().imgs} 
+                    isOnline={handleAvatar().isOnline} 
+                    isGroup={handleAvatar().isGroup} 
                 />
                 <div className="col" style={{ gap: "0.8rem"}}>
-                    <Text className='heading-7'>{customersConversation?.find((e: any) => e.Id !== user?.Id)?.Name}</Text>
+                    <Text className='heading-7'>{handleAvatar().name}</Text>
                     {/* su dung socket */}
-                    <Text className="subtitle-4">{isOnline ? "Đang hoạt động" : timeDifferenceFromTimestamp(customersConversation?.find((e: any) => e.Id !== user?.Id)?.LastActive)}</Text> 
+                    <Text className="subtitle-4">{handleAvatar().isOnline ? "Đang hoạt động" : timeDifferenceFromTimestamp(handleAvatar().lastActive)}</Text> 
+                    {/* <Text className="subtitle-4">{handleAvatar(conversationId).isOnline ? "Đang hoạt động" : timeDifferenceFromTimestamp(customersConversation?.find((e: any) => e.Id !== user?.Id)?.LastActive)}</Text>  */}
                 </div>
-            </> : <>
-                <AvatarCard 
-                    key={conversation?.Id} 
-                    listImg={[
-                        ...(conversation?.Img ? (Array.isArray(conversation?.Img) ? conversation?.Img : [conversation?.Img]) : 
-                            customersConversation?.filter((e: any) => e.Id !== user?.Id).map((e: any) => e?.Img))
-                        ]}  
-                    isGroup={true}
-                    isOnline={true}     
-                />
-                <div className="col" style={{ gap: "0.8rem"}}>
-                    <Text className='heading-7'>{conversation?.Name}</Text>
-                    {/* su dung socket */}
-                    <Text className="subtitle-4">{"Đang hoạt động"}</Text> 
-                </div>
-            </>}
         </div>
         {pinMessage.length > 1 && <div className='pin-message'>Pin</div>}
         <div className="col message" style={{ gap: "1.2rem"}}>
-            {messages.map((mess: any, index: any) => {
-                return <MessageCard key={`msg-${index}`} message={mess} customers={customersConversation?.filter((e:any) => e.Id !== user?.Id && e.Id === mess.CustomerId)} user={user}/>
+            {messages?.map((mess: any, index: any) => {
+                return <MessageCard key={`msg-${index}`} message={mess} customers={members ? members : []} user={user} />
             })}
+            <div>
+                {typingUsers.length > 0 && (
+                <p>{`${typingUsers.join(", ")} đang nhập...`}</p>
+            )}
+      </div>
         </div>
         <div className="message-input row"  style={{ height: "auto", gap:"2.4rem"}}>
                 <div className='media row' style={{ gap: "1.6rem", alignItems:"flex-end", height:"100%", paddingBottom:"2rem" }}>
@@ -277,28 +445,12 @@ const ChatDetails = ({user, socket, onlineUsers }) => {
                        </div>
                     ))}
                 </div> : undefined}
-                <div className="row" style={{ width:"100%", flex: 1, gap:"1.2rem", padding:"0 1.6rem", borderRadius:"2.4rem", minHeight:"auto", maxHeight: "auto", backgroundColor:"#F2F5F8", }}>
-                    <Winicon src='fill/emoticons/smile' size={'2rem'}/>
+                <div className="row " style={{ width:"100%", flex: 1, gap:"1.2rem", padding:"0 1.6rem", borderRadius:"2.4rem", minHeight:"auto", maxHeight: "auto", backgroundColor:"#F2F5F8", }}>
+                    <Winicon src='fill/emoticons/smile' size={'2rem'} onClick={ev => showEmojiPicker(ev)}/>
                         <TextArea
-                            ref={txtRef => {
-                                if(txtRef) {
-                                    const textarea = txtRef.getTextarea()!;
-                                    // const message = methods.getValues("message");
-                                    textarea.style.padding = "1rem 0 1rem 0";
-                                    textarea.onkeydown = (ev) => {
-                                            // if (ev.key === "Enter" && message.trim()) {
-                                            if (ev.key === "Enter") {
-                                                ev.preventDefault();
-                                                // Xử lý emoji trước khi gửi
-                                                // methods.setValue("message", replaceEmojis(message)) ; 
-                                                methods.handleSubmit(SendMessage)();
-                                                textarea.style.height = "auto";
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            ref={textAreaRef}
                             autoFocus
+                            id="textarea-message"
                             className="body-3"
                             placeholder='Soạn tin nhắn'
                             name='message'
@@ -312,6 +464,7 @@ const ChatDetails = ({user, socket, onlineUsers }) => {
                                     textarea.style.maxHeight = "14.2rem";
                                     textarea.style.height = `${textarea.scrollHeight}px`
                                 },
+                                
                             }) as any}
                             style={{ 
                                 width: "100%",
@@ -326,7 +479,7 @@ const ChatDetails = ({user, socket, onlineUsers }) => {
                         />
                     {methods.watch("message") || selectdFilePreview.length > 0 ? 
                     <div className="col" style={{ width:"2.4rem", height:"2.4rem", justifyContent:"center", alignItems:"center" }}>
-                        <button  onClick={methods.handleSubmit(SendMessage)}>
+                        <button id='send' onClick={methods.handleSubmit(SendMessage)}>
                             <Winicon src='fill/user interface/send-message' size={'2rem'} color="var(--primary-main-color)" />
                         </button>
                     </div>  : undefined}
@@ -364,16 +517,16 @@ const timeDifferenceFromTimestamp = (timestamp: number): string => {
     const diffDays = Math.floor(diffHours / 24); // Chuyển đổi sang ngày
 
     if (diffSeconds < 60) {
-        return `${diffSeconds} giây trước`;
+        return `Hoạt động ${diffSeconds} giây trước`;
     } else if (diffMinutes < 60) {
-        return `${diffMinutes} phút trước`;
+        return `Hoạt động ${diffMinutes} phút trước`;
     } else if (diffHours < 24) {
-        return `${diffHours} giờ trước`;
+        return `Hoạt động ${diffHours} giờ trước`;
     } else if (diffDays < 30) {
-        return `${diffDays} ngày trước`;
+        return `Hoạt động ${diffDays} ngày trước`;
     } else {
-        return `${Math.floor(diffDays / 30)} tháng trước`; // Xấp xỉ số tháng
+        return `Hoạt động ${Math.floor(diffDays / 30)} tháng trước`; // Xấp xỉ số tháng
     }
 };
 
-export default React.memo(ChatDetails);
+export default ChatDetails;

@@ -3,24 +3,23 @@ import {  useEffect, useRef, useState } from "react";
 import { TextField, Winicon, Text, showPopup, Popup } from "wini-web-components";
 import { DataController } from '../../../../baseController';
 import { ConversationCard } from '../../../../../component/card';
-import { Ultis } from '../../../../../common/Utils';
 import { useParams } from 'react-router-dom';
 import { PopupAddGroup } from './popup-add-group';
-import React from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { ConversatioStatus, ConversationType } from '../../../../../common/enum';
+import { ConversationActions } from '../../../../reducer/conversation/reducer';
 
-const ChatSideBarLeft = ({socket, onlineUsers, conversations}) => {
+const ChatSideBarLeft = ({socket, onlineUsers, conversations, setConversations}) => {
     const ref = useRef<any>();
+    const dispatch = useDispatch();
     const { conversationId } = useParams();
     const user = useSelector((state: any) => state.customer.data);
+    const conversation = useSelector((state: any) => state.conversation.data);
     const customers = useSelector((state: any) => state.customer.dataParticipantCustomer);
     const participant = useSelector((state: any) => state.customer.dataParticipant);
-    // const conversationController = new DataController("Conversation");
     const customerController = new DataController("Customer");
     const participantController = new DataController("Participant");
-    // const [conversations, setConversations] = useState<Array<any>>([]);
-    // const [participants, setParticipants] = useState<Array<any>>([]);
+    const [lastMessage, setLastMessage] = useState<any>();
 
     const handleConversation = (consversation: any) => {
         const customerIds = participant?.filter(e => e.ConversationId === consversation.Id).map(e => e.CustomerId);
@@ -46,13 +45,7 @@ const ChatSideBarLeft = ({socket, onlineUsers, conversations}) => {
             isGroup = false;
             name = member[0]?.Name;
         }
-        // if (consversation.Type === ConversationType.Private && participantIds?.length === 1 && onlineUsers.includes(participantIds[0])) {
-        //     isOnline = true;
-        // } else if (cv.Type === ConversationType.Group && cv.Status === ConversatioStatus.Online && ParticipantIds.length > 1) {
-        //     isOnline = true;
-        //     isGroup = true;
-        // }
-
+      
         return {
             name: name,
             isOnline: isOnline,
@@ -72,17 +65,6 @@ const ChatSideBarLeft = ({socket, onlineUsers, conversations}) => {
         // setCustomers(cusRes.data);
     }
 
-    // const getMemberByConversationId = async () => {
-    //     customerController.getListSimple({
-    //         page: 1, 
-    //         size: 20, 
-    //         query: `@ConversationId:{${conversationId}} -@CustomerId:{${user?.Id}}`
-    //     }).then((res: any) => {
-    //         debugger
-    //         setParticipants(res.data);
-    //     })
-    // }
-
     const showAddGroup = (ev: any) => {
         const _box = ev.target.getBoundingClientRect()
         showPopup({
@@ -96,59 +78,46 @@ const ChatSideBarLeft = ({socket, onlineUsers, conversations}) => {
             content: <PopupAddGroup user={user} ref={ref} />
         })
     }
- 
+    useEffect(() => {   
+        if (!socket) return; 
+      
+        // Nhận tin nhắn mới
+        socket.on("receive_message", (data) => {
+          setConversations((prevConversations) => {
+            const updated = prevConversations.map((conv) =>
+              conv.Id === data.ConversationId
+                ? {
+                    ...conv,
+                    LastMessage: data.Content,
+                    LastMessageTime: data.DateCreated,
+                  }
+                : conv
+            );
+      
+            // Nếu cuộc trò chuyện không tồn tại, thêm mới
+            if (!updated.find((conv) => conv.Id === data.ConversationId)) {
+              updated.push({
+                Id: data.ConversationId,
+                LastMessage: data.Content,
+                LastMessageTime: data.DateCreated,
+              });
+            }
+      
+            // Sắp xếp danh sách cuộc trò chuyện theo thời gian giảm dần
+            updated.sort((a, b) => b.LastMessageTime - a.LastMessageTime);
+            return updated;
+          });
+        });
+      
+        // Cleanup khi component unmount
+        return () => socket.off("receive_message");
+    }, [socket]);
+      
     useEffect(() => {
         if (!conversationId || !user) return;
         getMemberByConversationId();
-      }, [conversationId, user]);
+    }, [conversationId, user]);
 
-    // useEffect(() => {
-    //        if(socket) {
-    //         socket.on("update_user_status", ({ userId, status }) => {
-    //             setOnlineUsers((prev) => {
-    //                 const updatedUsers = [...prev];
-    
-    //                 if (status === 1 && !updatedUsers.includes(userId)) {
-    //                     // Nếu user online, thêm vào danh sách
-    //                     updatedUsers.push(userId);
-    //                 } else if (status === 0) {
-    //                     // Nếu user offline, xóa khỏi danh sách
-    //                     return updatedUsers.filter((id) => id !== userId);
-    //                 }
-    //                 console.log("updatedUsers", updatedUsers)
-    //                 return updatedUsers;
-    //             });
-    
-    //         });
-    
-    //         return () => {
-    //             socket.disconnect();
-    //         };
-    //        }
-    // }, [socket])
-
-    // useEffect(() => { 
-    //     if(!user?.Id) return;
-    //     participantController.getListSimple({
-    //         page: 1,
-    //         size: 100,
-    //         query:`@CustomerId:{${user?.Id}}`
-    //     }).then(async (res: any) => {
-    //         conversationController.getByListId(res.data.map((e: any) => e.ConversationId)).then((res: any) => { 
-    //             setConversations([...res.data]);
-    //         })
-    //         participantController.getListSimple({
-    //             page: 1,
-    //             size: 100,
-    //             query:`@ConversationId:{${res.data.map(e => e.ConversationId).join(" | ")}}`
-    //         }).then(async (res: any) => {
-    //             customerController.getByListId(Ultis.removeDuplicates(res.data.map((e: any) => e.CustomerId))).then((res: any) => {
-    //                 setCustomers([...customers ,...res.data]);
-    //             })
-    //             setParticipants([...participants, ...res.data]);
-    //         })
-    //     })
-    // },[user, conversationId])
     return <div className="left-sidebar col">
             <Popup ref={ref} />
             <div className="col" style={{ gap:"1.6rem"}}>
@@ -164,22 +133,21 @@ const ChatSideBarLeft = ({socket, onlineUsers, conversations}) => {
                 />
             </div>
             <div className="list-conversation col">
-                {conversations.length > 0 ? conversations.map((cv: any, i: number) => {
-                    // const listCustomer =  participants.filter((e: any) => e?.ConversationId === cv?.Id && e.CustomerId !== user?.Id).map((e: any) => e.CustomerId);
-                    // const listImg = cv?.Img ? Array(cv?.Img) : customers.filter((e: any) => listCustomer.includes(e.Id)).map(e => e.Img);
-                    // const name = cv?.Type === 1 ? customers.find((e: any) => listCustomer.includes(e.Id))?.Name : cv.Name
-                
+                {conversations?.length > 0 ? conversations
+                .map((cv: any, i: number) => {
                     const { name, isOnline, isGroup, imgs} = handleConversation(cv);
                     return (
                         <ConversationCard 
                             id={cv?.Id} 
                             key={`cv-${i}`} 
                             name={name}
-                            newMessage={"lorem irusss..."}
+                            socket={socket}
+                            newMessage={cv?.LastMessage}
                             isOnline={isOnline}
                             listImg={imgs}
                             isGroup={isGroup}
                             isRead={false}
+                            handlerOnClick={() => ConversationActions.getConversationMember(dispatch, conversationId as string, user?.Id)}
                             lastMessageTime={"20 hours"}
                         />  
                     )
@@ -188,6 +156,6 @@ const ChatSideBarLeft = ({socket, onlineUsers, conversations}) => {
         </div>
 }
 
-export default React.memo(ChatSideBarLeft);
+export default ChatSideBarLeft;
 
 

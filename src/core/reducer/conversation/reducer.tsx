@@ -4,6 +4,7 @@ import ConfigApi from '../../../common/config'
 
 interface ConversationSimpleResponse {
     data?: any,
+    dataConversationMember?:any
     onLoading?: boolean,
     type?: string
 }
@@ -22,6 +23,9 @@ export const conversationSlice = createSlice({
                 case 'GETCONVERSATION':
                     state.data = action.payload.data
                     break;
+                case 'GETCONVERSATIONMEMBER':
+                    state.dataConversationMember = action.payload.data
+                    break;
                 default:
                     break;
             }
@@ -37,43 +41,39 @@ const { handleActions, onFetching } = conversationSlice.actions
 export default conversationSlice.reducer
 
 export class ConversationActions {
-    // static getInfor = async (dispatch: Dispatch<UnknownAction>) => {
-    //     dispatch(onFetching())
-    //     const res = await BaseDA.get(ConfigApi.url + 'data/getInfo', {
-    //         headers: {  
-    //             pid: ConfigApi.ebigId,
-    //             module: 'Customer'
-    //         },
-    //     })
-    //     if (res.code === 200) {
-    //         dispatch(handleActions({
-    //             type: 'GETConversation',
-    //             data: res.data,
-    //         }))
-    //     }
-    // }
-
-    static getConversation = async (dispatch: Dispatch<UnknownAction>, props: { conversationId: string }) => {
-        // const res = await BaseDA.post(ConfigApi.url + 'intergration/ebig/login', {
-        //     headers: { 
-        //         pid: ConfigApi.ebigId,
-        //         module: 'Customer',
-        //     },
-        //     body: props
-        // })
+    static getConversationMember = async (dispatch: Dispatch<UnknownAction>, conversationId: string, userId: string) => {
         dispatch(onFetching())
-        // const res = await BaseDA.post(ConfigApi.url + 'data/getListSimple', {
-        //     headers: {
-        //         pid: ConfigApi.ebigId,
-        //         module: 'Conversation',
-        //     },
-        //     body: { 
-        //         page: 1,
-        //         size: 100,
-        //         searchRaw: `@ConversationId:{${props.conversationIds.join(" | ")}} -@CustomerId:{${props.userId}}` 
-        //     }
-        // })
-        const res = await BaseDA.post(ConfigApi.url + `data/getById?id=${props.conversationId}`, {
+        const res = await BaseDA.post(ConfigApi.url + 'data/getListSimple', {
+            headers: {
+                pid: ConfigApi.ebigId,
+                module: 'Participant',
+            },
+            body: { 
+                page: 1,
+                size: 100,
+                searchRaw: `@ConversationId:{${conversationId}} -@CustomerId:{${userId}}` 
+            }
+        })
+       
+        const resCus = await BaseDA.post(ConfigApi.url + 'data/getByIds', {
+            headers: {
+                pid: ConfigApi.ebigId,
+                module: 'Customer',
+            },
+            body: { ids: res.data.map(e => e?.CustomerId) }
+        })
+        if (res.code === 200) {
+            dispatch(handleActions({
+                type: 'GETCONVERSATIONMEMBER',
+                data:  resCus.data.filter((e, index, arr) => arr.findIndex(obj => obj.Id === e.Id) === index)
+            }
+        ))}
+        return res
+    }
+
+    static getConversation = async (dispatch: Dispatch<UnknownAction>, conversationId: string ) => {
+        dispatch(onFetching())
+        const res = await BaseDA.post(ConfigApi.url + `data/getById?id=${conversationId}`, {
             headers: {
                 pid: ConfigApi.ebigId,
                 module: 'Conversation',
