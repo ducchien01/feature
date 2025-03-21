@@ -388,7 +388,7 @@ const ChatDetails = ({user, socket, onlineUsers, setConversations }) => {
       </div>
         </div>
         <div className="message-input row"  style={{ height: "auto", gap:"2.4rem"}}>
-                <div className='media row' style={{ gap: "1.6rem", alignItems:"flex-end", height:"100%", paddingBottom:"2rem" }}>
+            <div className='media row' style={{ gap: "1.6rem", alignItems:"flex-end", height:"100%", paddingBottom:"2rem" }}>
                     <div className="media-voice row" >
                         <Winicon src='fill/multimedia/microphone' size={'2rem'} />
                         <input type="file" className="row" style={{ display: "none"}}/>
@@ -399,7 +399,7 @@ const ChatDetails = ({user, socket, onlineUsers, setConversations }) => {
                         </label>
                         <input id='file-input' type="file" multiple className="row" style={{ display: "none"}} onChange={handleFilePreview}/>
                     </div>
-                </div>
+            </div>
             <div className="col" style={{ width:"100%", flex: 1}}>
                 {selectdFilePreview.length > 0 ? <div className="file-preview row" >
                     {selectdFilePreview.map((file) => (

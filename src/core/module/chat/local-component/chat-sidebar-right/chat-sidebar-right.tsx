@@ -51,7 +51,7 @@ const ChatSideBarRight = ({user, socket}) => {
         <div className="col main">
             <div className="heading-info col">
                 <AvatarCard listImg={[user?.Img]} isOnline={true}/>
-                <Text>{user?.Name}</Text>
+                <Text>{user?.Name}</Text> 
                 <Text>{isOnline ? "Đang hoạt động" : ""}</Text>
             </div>
             <div className="action row" style={{ gap: "0.8rem", padding:"1.6rem 0", justifyContent: "center" }}>

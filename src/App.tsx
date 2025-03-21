@@ -31,8 +31,8 @@ function App() {
         <Route path="*" element={<NotFound />} />
         {/* Route cần bảo vệ */}
         <Route element={<PrivateRoute />}>
-          <Route path="/" element={ <Chat /> } />
           <Route path="/chat/:conversationId" element={ <Chat /> } />
+          <Route path="/" element={ <Chat /> } />
           <Route path="/requests" element={ <Requests /> }/>
           <Route path="/archived" element={ <Archived /> }/>
         </Route>
